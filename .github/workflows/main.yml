@@ -1,0 +1,83 @@
+name: Main
+on: push
+jobs:
+
+  version:
+    name: Create version number
+    runs-on: ubuntu-latest
+    outputs:
+      output1: ${{ steps.step1.outputs.test }}
+    steps:
+      - uses: actions/checkout@v1
+      - name: Install GitVersion
+        uses: gittools/actions/gitversion/setup@v0.9.7
+        with:
+          versionSpec: "5.x"
+      - name: gitversion
+        uses: gittools/actions/gitversion/execute@v0.9.7
+      - name: Create version.txt with nuGetVersion
+        run: echo ${{ steps.gitversion.outputs.GitVersion_FullSemVer  }} > version.txt
+      - name: Set version output
+        id: step1
+        run: echo "test=${{ env.GitVersion_FullSemVer }}" >> $GITHUB_OUTPUT
+      - name: Upload version.txt as an artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: version-artifact
+          path: version.txt
+        if: success()
+      - name: Handle error
+        if: failure()
+        run: |
+          echo "Workflow failed: ${{ job.status }}"
+
+  release-apk:
+    name: Release APK
+    needs: version
+    runs-on: ubuntu-latest
+    steps:
+
+      - uses: actions/checkout@v1
+        name: Get latest commit
+
+      - uses: actions/setup-java@v1
+        name: Set up JDK 16
+        with:
+          java-version: '16.x'
+
+      - uses: subosito/flutter-action@v1
+        name: Install Flutter
+        with:
+          channel: 'beta'
+      - run: flutter pub get
+        name: Get dependencies
+
+      - run: flutter build apk
+        name: Build APK
+
+      - uses: actions/upload-artifact@v2
+        name: Upload APK
+        with:
+          name: release-apk
+          path: build/app/outputs/apk/release/app-release.apk
+
+      - name: Echo
+        run: |
+          echo "GITHUB_TOKEN ${{ secrets.GITHUB_TOKEN }}"
+          echo "Token ${{ secrets.TOKEN }}"
+          echo "SHA ${{ github.sha }}"
+          echo "Ref ${{ github.ref }}"
+          echo "RUN ${{ github.run_number }}"
+
+      - uses: actions/create-release@v1
+        name: Create a Release in GitHub
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          tag_name: ${{ needs.version.outputs.output1 }}
+
+        with:
+          artifacts: build/app/outputs/apk/release/*.apk
+          token: ${{ secrets.TOKEN }}
+          tag_name: ${{ needs.version.outputs.output1 }}
+          tag: ${{ needs.version.outputs.output1 }}
+          commit: ${{ github.sha }}
