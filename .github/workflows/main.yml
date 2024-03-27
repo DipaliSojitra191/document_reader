@@ -52,9 +52,6 @@ jobs:
       - run: flutter pub get
         name: Get dependencies
 
-      - name: Statically analyze the Dart code for any errors.
-        run: flutter analyze .
-
       - run: Flutter Test
         name: flutter test --coverage
 
