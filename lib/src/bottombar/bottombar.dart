@@ -218,7 +218,7 @@ class _BottomBarScreenState extends State<BottomBarScreen> {
     bool? isPdf,
   }) {
     return InkWell(
-      key: Key('btn $key'),
+      key: Key('btn-$key'),
       onTap: (isPdf ?? false)
           ? () async {
               try {

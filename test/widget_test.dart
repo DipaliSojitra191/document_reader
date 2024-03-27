@@ -490,7 +490,7 @@ void main() async {
     await tester.pumpAndSettle(const Duration(seconds: 2));
     expect(find.byKey(const Key("camera")), findsOneWidget);
 
-    await tester.tap(find.byKey(Key("btn-scan")));
+    await tester.tap(find.byKey(const Key("btn-scan")));
 
     final MockImagePicker mockImagePicker = MockImagePicker();
 

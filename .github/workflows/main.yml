@@ -53,7 +53,7 @@ jobs:
         name: Get dependencies
 
       - run: Flutter Test
-        name: flutter test
+        name: flutter test test/widget_test.dart
 
       - run: flutter build apk
         name: Build APK
