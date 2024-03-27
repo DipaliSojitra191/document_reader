@@ -56,7 +56,7 @@ jobs:
         run: flutter analyze .
 
       - run: Flutter Test
-        name: flutter test
+        name: flutter test --coverage
 
       - run: flutter build apk
         name: Build APK
