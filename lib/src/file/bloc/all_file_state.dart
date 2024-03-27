@@ -1,30 +1,30 @@
 import 'package:document_reader/src/file/model/files_data_model.dart';
 
-abstract class AllFileState {}
+abstract class AllFileBlocState {}
 
-class AllFileInitial extends AllFileState {}
+class AllFileInitial extends AllFileBlocState {}
 
-class GetFileState extends AllFileState {
+class GetFileState extends AllFileBlocState {
   final List<FilesDataModel> allFiles;
   final bool? selected;
 
   GetFileState({required this.allFiles, this.selected});
 }
 
-class CheckStoragePermissionStatus extends AllFileState {
+class CheckStoragePermissionStatus extends AllFileBlocState {
   final bool isGranted;
 
   CheckStoragePermissionStatus({required this.isGranted});
 }
 
-class FilterState extends AllFileState {
+class FilterState extends AllFileBlocState {
   final List<FilesDataModel> allFiles;
   final bool? selected;
 
   FilterState({required this.allFiles, this.selected});
 }
 
-class GetDirState extends AllFileState {
+class GetDirState extends AllFileBlocState {
   final List<FilesDataModel> allFiles;
   final bool? selected;
   final bool? isDocument;
@@ -32,9 +32,9 @@ class GetDirState extends AllFileState {
   GetDirState({required this.allFiles, this.selected, this.isDocument});
 }
 
-class GetFileLoadingState extends AllFileState {}
+class GetFileLoadingState extends AllFileBlocState {}
 
-class FileSelectState extends AllFileState {
+class FileSelectState extends AllFileBlocState {
   final bool selected;
   final bool isBookmark;
   final int index;
@@ -46,26 +46,26 @@ class FileSelectState extends AllFileState {
   });
 }
 
-class DirSelectedState extends AllFileState {
+class DirSelectedState extends AllFileBlocState {
   final int index;
 
   DirSelectedState({required this.index});
 }
 
-class SearchListState extends AllFileState {
+class SearchListState extends AllFileBlocState {
   final List<FilesDataModel> searchList;
   final bool isDocument;
 
   SearchListState({required this.searchList, required this.isDocument});
 }
 
-class SearchOnTapState extends AllFileState {
+class SearchOnTapState extends AllFileBlocState {
   final bool search;
 
   SearchOnTapState({required this.search});
 }
 
-class SelectedBackTapState extends AllFileState {
+class SelectedBackTapState extends AllFileBlocState {
   final bool selected;
 
   SelectedBackTapState({required this.selected});

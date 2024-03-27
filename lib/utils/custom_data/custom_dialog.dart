@@ -10,6 +10,7 @@ void deleteDialog({
   required BuildContext context,
   required VoidCallback callback,
 }) {
+  debugPrint("delete dialog open");
   showDialog(
     context: context,
     builder: (BuildContext context) {
@@ -19,6 +20,7 @@ void deleteDialog({
         ),
         contentPadding: EdgeInsets.fromLTRB(20.w, 10.h, 10.h, 10.h),
         content: Column(
+          key: const Key('delete-dialog'),
           mainAxisSize: MainAxisSize.min,
           children: [
             Row(
@@ -30,14 +32,14 @@ void deleteDialog({
                 Padding(
                   padding: EdgeInsets.only(top: 12.h),
                   child: Text(
-                    AppLocalizations.of(context)!.delete,
+                    AppLocalizations.of(context)?.delete ?? "",
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.displayMedium,
                   ),
                 ),
                 const Spacer(),
                 InkWell(
-                  onTap: () => navigateBack(),
+                  onTap: () => navigateBack(context: context),
                   child: Container(
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
@@ -51,7 +53,7 @@ void deleteDialog({
             ),
             SizedBox(height: 10.h),
             Text(
-              AppLocalizations.of(context)!.confirmDelete,
+              AppLocalizations.of(context)?.confirmDelete ?? '',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.displaySmall,
             ),
@@ -60,12 +62,12 @@ void deleteDialog({
               padding: EdgeInsets.all(5.w),
               child: Center(
                 child: CustomBtn(
+                  key: const Key("button"),
                   onTap: () async {
-                    navigateBack();
-
                     callback();
+                    navigateBack(context: context);
                   },
-                  title: AppLocalizations.of(context)!.delete,
+                  title: AppLocalizations.of(context)?.delete ?? "",
                   radius: 10.w,
                   height: 35.h,
                   width: 100.w,
@@ -90,6 +92,7 @@ Future<String> renameDialog({
     builder: (BuildContext context) {
       return StatefulBuilder(builder: (context, setStat) {
         return AlertDialog(
+          key: const Key("rename-dialog"),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(15.w),
           ),
@@ -106,14 +109,14 @@ Future<String> renameDialog({
                   Padding(
                     padding: EdgeInsets.only(top: 12.h),
                     child: Text(
-                      AppLocalizations.of(context)!.rename,
+                      AppLocalizations.of(context)?.rename ?? "",
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.displayMedium?.copyWith(fontSize: 17.sp),
                     ),
                   ),
                   const Spacer(),
                   InkWell(
-                    onTap: () => navigateBack(),
+                    onTap: () => navigateBack(context: context),
                     child: Container(
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
@@ -155,7 +158,7 @@ Future<String> renameDialog({
                         ),
                       ),
                       filled: true,
-                      hintText: AppLocalizations.of(context)!.fileRename,
+                      hintText: AppLocalizations.of(context)?.fileRename ?? "",
                       hintStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(color: ColorUtils.blueE8),
                       border: InputBorder.none,
                       contentPadding: EdgeInsets.all(10.w),
@@ -189,10 +192,10 @@ Future<String> renameDialog({
                   child: CustomBtn(
                     onTap: () async {
                       if (renameKey.currentState!.validate()) {
-                        navigateBack();
+                        navigateBack(context: context);
                       }
                     },
-                    title: AppLocalizations.of(context)!.ok,
+                    title: AppLocalizations.of(context)?.ok ?? "",
                     radius: 10.w,
                     height: 38.h,
                     width: 100.w,
@@ -213,6 +216,7 @@ moveOutDialog({
   required BuildContext context,
   required VoidCallback moveOut,
 }) {
+  debugPrint("move out dialog open");
   showDialog(
     context: context,
     builder: (BuildContext context) {
@@ -222,6 +226,7 @@ moveOutDialog({
         ),
         contentPadding: EdgeInsets.fromLTRB(20.w, 10.h, 10.h, 10.h),
         content: Column(
+          key: const Key('move-out-dialog'),
           mainAxisSize: MainAxisSize.min,
           children: [
             Row(
@@ -233,14 +238,14 @@ moveOutDialog({
                 Padding(
                   padding: EdgeInsets.only(top: 12.h),
                   child: Text(
-                    AppLocalizations.of(context)!.moveOutOfRecent,
+                    AppLocalizations.of(context)?.moveOutOfRecent ?? "",
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.displayMedium?.copyWith(fontSize: 17.sp),
                   ),
                 ),
                 const Spacer(),
                 InkWell(
-                  onTap: () => navigateBack(),
+                  onTap: () => navigateBack(context: context),
                   child: Container(
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
@@ -254,7 +259,7 @@ moveOutDialog({
             ),
             SizedBox(height: 10.h),
             Text(
-              AppLocalizations.of(context)!.confirmMove,
+              AppLocalizations.of(context)?.confirmMove ?? "",
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.displaySmall,
             ),
@@ -264,7 +269,7 @@ moveOutDialog({
               child: Center(
                 child: CustomBtn(
                   onTap: () {
-                    navigateBack();
+                    navigateBack(context: context);
                     moveOut();
                   },
                   title: 'Yes',
@@ -278,7 +283,7 @@ moveOutDialog({
         ),
       );
     },
-  );
+  ).then((value) => debugPrint("more dialog closed"));
 }
 
 Future<bool> showExitConfirmationDialog(BuildContext context) async {
@@ -292,12 +297,12 @@ Future<bool> showExitConfirmationDialog(BuildContext context) async {
         surfaceTintColor: Colors.white,
         contentPadding: EdgeInsets.fromLTRB(10.w, 10.h, 10.w, 10.h),
         title: Text(
-          AppLocalizations.of(context)!.exitApp,
+          AppLocalizations.of(context)?.exitApp ?? "",
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.displayMedium?.copyWith(fontSize: 15.sp),
         ),
         content: Text(
-          AppLocalizations.of(context)!.exitConfirmation,
+          AppLocalizations.of(context)?.exitConfirmation ?? "",
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.displaySmall,
         ),
@@ -307,20 +312,20 @@ Future<bool> showExitConfirmationDialog(BuildContext context) async {
             children: [
               TextButton(
                 onPressed: () {
-                  navigateBack();
+                  navigateBack(context: context);
                   data = false;
                 },
-                child: Text(AppLocalizations.of(currentContext)!.no),
+                child: Text(AppLocalizations.of(context)?.no ?? ""),
               ),
               Padding(
                 padding: EdgeInsets.all(5.w),
                 child: Center(
                   child: CustomBtn(
                     onTap: () {
-                      navigateBack();
+                      navigateBack(context: context);
                       data = true;
                     },
-                    title: AppLocalizations.of(currentContext)!.yes,
+                    title: AppLocalizations.of(context)?.yes ?? "",
                     radius: 10.w,
                     height: 30.h,
                     width: 60.w,
@@ -332,7 +337,9 @@ Future<bool> showExitConfirmationDialog(BuildContext context) async {
         ],
       );
     },
-  );
+  ).then((value) {
+    debugPrint("Show exit confirmation dialog closed");
+  });
   return data;
 }
 
@@ -343,14 +350,16 @@ Future<bool> permissionDialog({required VoidCallback allow, required BuildContex
     context: internetContext,
     builder: (BuildContext context) {
       return AlertDialog(
+        key: const Key("permission-dialog"),
         contentPadding: EdgeInsets.fromLTRB(15.w, 10.h, 15.w, 10.h),
         title: Text(
-          AppLocalizations.of(internetContext)!.permissionRequired,
+          key: const Key("permission-dialog-title"),
+          AppLocalizations.of(internetContext)?.permissionRequired ?? '',
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.displayMedium?.copyWith(fontSize: 15.sp),
         ),
         content: Text(
-          AppLocalizations.of(internetContext)!.externalStoragePermissionRequired,
+          AppLocalizations.of(internetContext)?.externalStoragePermissionRequired ?? '',
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.displaySmall,
         ),
@@ -361,17 +370,19 @@ Future<bool> permissionDialog({required VoidCallback allow, required BuildContex
               Navigator.pop(internetContext);
               Navigator.pop(internetContext);
             },
-            child: Text(AppLocalizations.of(currentContext)!.cancel),
+            child: Text(AppLocalizations.of(context)?.cancel ?? ""),
           ),
           TextButton(
             onPressed: () {
               allow();
             },
-            child: Text(AppLocalizations.of(currentContext)!.allow),
+            child: Text(AppLocalizations.of(context)?.allow ?? ''),
           ),
         ],
       );
     },
-  );
+  ).then((value) {
+    debugPrint('permission dialog closed');
+  });
   return data;
 }

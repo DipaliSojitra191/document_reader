@@ -16,7 +16,6 @@ import 'package:document_reader/utils/common_appbar.dart';
 import 'package:document_reader/utils/common_functions.dart';
 import 'package:document_reader/utils/common_linear_gradient.dart';
 import 'package:document_reader/utils/custom_data/custom_dialog.dart';
-import 'package:document_reader/utils/logs.dart';
 import 'package:document_reader/utils/navigation.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -64,7 +63,7 @@ class _ImageEditorScreenState extends State<ImageEditorScreen> {
   @override
   void initState() {
     super.initState();
-    checkInternetConnection();
+    checkInternetConnection(context: context);
   }
 
   @override
@@ -73,7 +72,6 @@ class _ImageEditorScreenState extends State<ImageEditorScreen> {
     return BlocConsumer(
       bloc: imageEditorBloc,
       listener: (context, ImageEditorState state) {
-        logs(message: "STATE:-----> $state ");
         if (state is SetPdfNameState) {
           pdfName = state.name;
         } else if (state is SetCurrentIndexState) {
@@ -91,7 +89,7 @@ class _ImageEditorScreenState extends State<ImageEditorScreen> {
           showLoader = true;
         } else if (state is SaveImageState) {
           if (state.status == true) {
-            removeRoute(const BottomBar(currentindex: 0));
+            removeRoute(const BottomBarScreen(currentindex: 0), context: context);
           }
           showLoader = false;
         } else if (state is ImageStatusState) {
@@ -102,7 +100,7 @@ class _ImageEditorScreenState extends State<ImageEditorScreen> {
           widget.uIntImageList.removeAt(state.index);
           widget.selectedAssets.removeAt(state.index);
           if (widget.uIntImageList.isEmpty) {
-            navigateBack();
+            navigateBack(context: context);
           }
         } else if (state is FilterState) {
           filterIndex = 0;
@@ -124,7 +122,7 @@ class _ImageEditorScreenState extends State<ImageEditorScreen> {
                 if (imageType != ImageStatus.none) {
                   imageEditorBloc.add(ImageStatusEvent(imageType: ImageStatus.none));
                 } else {
-                  navigateBack();
+                  navigateBack(context: context);
                 }
               },
               action: [
@@ -317,7 +315,7 @@ class _ImageEditorScreenState extends State<ImageEditorScreen> {
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 15.w),
                 child: InkWell(
-                  onTap: () => navigateBack(),
+                  onTap: () => navigateBack(context: context),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -393,7 +391,7 @@ class _ImageEditorScreenState extends State<ImageEditorScreen> {
         InkWell(
           onTap: () {
             if (!showLoader) {
-              imageEditorBloc.add(SaveImageEvent(imageList: widget.uIntImageList));
+              imageEditorBloc.add(SaveImageEvent(imageList: widget.uIntImageList, context: context));
             }
           },
           child: Container(

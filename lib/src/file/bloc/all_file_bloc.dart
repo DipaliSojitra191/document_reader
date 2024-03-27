@@ -12,10 +12,10 @@ import 'package:document_reader/utils/common_functions.dart';
 import 'package:document_reader/utils/custom_data/custom_dialog.dart';
 import 'package:document_reader/utils/logs.dart';
 import 'package:document_reader/utils/navigation.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-class AllFileBloc extends Bloc<AllFileEvent, AllFileState> {
+class AllFileBloc extends Bloc<AllFileEvent, AllFileBlocState> {
   AllFileBloc() : super(AllFileInitial()) {
     on<GetFileEvent>(getFileEvent);
     on<GetDirEvent>(getDirEvent);
@@ -49,16 +49,16 @@ class AllFileBloc extends Bloc<AllFileEvent, AllFileState> {
   String directory = "";
   List<FilesDataModel> allFiles = [];
 
-  fileSelectedUnSelectedEvent(FileSelectedUnSelectedEvent event, Emitter<AllFileState> emit) {
+  fileSelectedUnSelectedEvent(FileSelectedUnSelectedEvent event, Emitter<AllFileBlocState> emit) {
     if (event.selected == false) {
-      for (var element in allFiles) {
+      for (var element in event.allFiles) {
         element.selected = false;
       }
     }
-    emit(GetFileState(allFiles: allFiles, selected: event.selected));
+    emit(GetFileState(allFiles: event.allFiles, selected: event.selected));
   }
 
-  fileSelectEvent(FileSelectEvent event, Emitter<AllFileState> emit) {
+  fileSelectEvent(FileSelectEvent event, Emitter<AllFileBlocState> emit) {
     emit(
       FileSelectState(
         isBookmark: event.isBookmark,
@@ -70,21 +70,86 @@ class AllFileBloc extends Bloc<AllFileEvent, AllFileState> {
 
   bool hasPermission = false;
 
-  getFileEvent(GetFileEvent event, Emitter<AllFileState> emit) async {
+  getFileEvent(GetFileEvent event, Emitter<AllFileBlocState> emit) async {
+    // List<FilesDataModel> allFiles = [
+    //   FilesDataModel(
+    //     count: "1",
+    //     size: "17 KB",
+    //     path: File("1"),
+    //     selected: false,
+    //     bookmark: false,
+    //     isFolder: false,
+    //     name: "entity ${Random().nextInt(100)}.pdf",
+    //     date: DateTime.now().toString(),
+    //   ),
+    //   FilesDataModel(
+    //     count: "2",
+    //     size: "15 KB",
+    //     path: File("2"),
+    //     selected: false,
+    //     bookmark: false,
+    //     isFolder: false,
+    //     name: "entity ${Random().nextInt(100)}.doc",
+    //     date: DateTime.now().toString(),
+    //   ),
+    //   FilesDataModel(
+    //     count: "3",
+    //     size: "13 KB",
+    //     path: File("3"),
+    //     selected: false,
+    //     bookmark: false,
+    //     isFolder: false,
+    //     name: "entity ${Random().nextInt(100)}.ppt",
+    //     date: DateTime.now().toString(),
+    //   ),
+    //   FilesDataModel(
+    //     count: "4",
+    //     size: "11 KB",
+    //     path: File("4"),
+    //     selected: false,
+    //     bookmark: false,
+    //     isFolder: false,
+    //     name: "entity ${Random().nextInt(100)}.txt",
+    //     date: DateTime.now().toString(),
+    //   ),
+    //   FilesDataModel(
+    //     count: "5",
+    //     size: "15 KB",
+    //     path: File("5"),
+    //     selected: false,
+    //     bookmark: false,
+    //     isFolder: false,
+    //     name: "entity ${Random().nextInt(100)}.ppt",
+    //     date: DateTime.now().toString(),
+    //   ),
+    //   FilesDataModel(
+    //     count: "6",
+    //     size: "20 KB",
+    //     path: File("6"),
+    //     selected: false,
+    //     bookmark: false,
+    //     isFolder: false,
+    //     name: "entity ${Random().nextInt(100)}.xls",
+    //     date: DateTime.now().toString(),
+    //   ),
+    // ];
+    //
+    // emit(GetFileState(allFiles: allFiles));
+
     allFiles = [];
     bool s1 = await Permission.mediaLibrary.status == PermissionStatus.granted;
     bool s = await Permission.manageExternalStorage.status == PermissionStatus.granted;
 
     hasPermission = s1 == true && s == true;
     if (!hasPermission) {
-      BuildContext internetContext = currentContext;
       if (Platform.isAndroid) {
+        logs(message: "show permission dialog");
         await permissionDialog(
-          internetContext: internetContext,
+          internetContext: event.context,
           allow: () async {
-            hasPermission = await storagePermission();
+            hasPermission = await storagePermission(context: event.context);
             if (hasPermission) {
-              navigateBack(argsContext: internetContext);
+              navigateBack(context: event.context);
               CheckStoragePermissionStatus(isGranted: true);
             } else {
               CheckStoragePermissionStatus(isGranted: false);
@@ -128,6 +193,7 @@ class AllFileBloc extends Bloc<AllFileEvent, AllFileState> {
     }
 
     if (Platform.isIOS) {
+      logs(message: "IF part");
       await Permission.storage.request();
 
       emit(GetFileState(allFiles: allFiles));
@@ -164,6 +230,7 @@ class AllFileBloc extends Bloc<AllFileEvent, AllFileState> {
             }
           }
         } catch (e) {
+          debugPrint("E:--> $e");
           logs(message: "DIR not found", name: 'directory');
         }
 
@@ -181,6 +248,7 @@ class AllFileBloc extends Bloc<AllFileEvent, AllFileState> {
             }
           }
         } catch (e) {
+          debugPrint("E:--> $e");
           logs(message: "Document not found", name: 'directory');
         }
 
@@ -197,6 +265,7 @@ class AllFileBloc extends Bloc<AllFileEvent, AllFileState> {
             }
           }
         } catch (e) {
+          debugPrint("E:--> $e");
           logs(message: "Download not found", name: 'directory');
         }
       }
@@ -207,7 +276,7 @@ class AllFileBloc extends Bloc<AllFileEvent, AllFileState> {
     }
   }
 
-  getDirEvent(GetDirEvent event, Emitter<AllFileState> emit) async {
+  getDirEvent(GetDirEvent event, Emitter<AllFileBlocState> emit) async {
     try {
       allFiles = [];
       emit(GetFileLoadingState());
@@ -231,8 +300,8 @@ class AllFileBloc extends Bloc<AllFileEvent, AllFileState> {
     }
   }
 
-  filterEvent(FilterEvent event, Emitter<AllFileState> emit) async {
-    filterData(event.selected1, event.selected2);
+  filterEvent(FilterEvent event, Emitter<AllFileBlocState> emit) async {
+    allFiles = await filterData(event.selected1, event.selected2);
     emit(FilterState(allFiles: allFiles));
   }
 

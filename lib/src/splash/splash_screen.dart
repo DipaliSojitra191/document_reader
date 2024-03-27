@@ -19,18 +19,16 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    checkInternetConnection();
-
-    WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
-      Future.delayed(const Duration(seconds: 3), () {
-        removeRoute(const BottomBar(currentindex: 0));
-      });
+    checkInternetConnection(context: context);
+    Future.delayed(const Duration(seconds: 3), () {
+      removeRoute(const BottomBarScreen(), context: context);
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: const Key('splash'),
       body: SizedBox(
         height: MediaQuery.of(context).size.height,
         width: MediaQuery.of(context).size.width,

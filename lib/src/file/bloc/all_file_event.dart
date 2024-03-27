@@ -1,13 +1,16 @@
 import 'package:document_reader/src/file/model/files_data_model.dart';
+import 'package:flutter/cupertino.dart';
 
 abstract class AllFileEvent {}
 
 class GetFileEvent extends AllFileEvent {
+  final BuildContext context;
   final String fileType;
   final int selected1;
   final int selected2;
 
   GetFileEvent({
+    required this.context,
     required this.fileType,
     required this.selected1,
     required this.selected2,

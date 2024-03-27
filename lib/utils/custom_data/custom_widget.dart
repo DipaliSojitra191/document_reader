@@ -11,9 +11,14 @@ Widget menus({
   required FilesDataModel allFiles,
 }) {
   return Column(
+    key: Key('widget-$name'),
     children: [
       InkWell(
-        onTap: onTap,
+        key: Key('onTap-$name'),
+        onTap: () {
+          onTap();
+        },
+        // onTap: onTap,
         child: Image.asset(image, scale: 4.w),
       ),
       SizedBox(height: 5.h),

@@ -3,7 +3,6 @@ import 'package:document_reader/src/onboarding/bloc/onboarding_bloc.dart';
 import 'package:document_reader/src/onboarding/bloc/onboarding_event.dart';
 import 'package:document_reader/src/onboarding/bloc/onboarding_state.dart';
 import 'package:document_reader/src/onboarding/model/onboarding_model.dart';
-import 'package:document_reader/src/splash/splash_Screen.dart';
 import 'package:document_reader/utils/AppColors.dart';
 import 'package:document_reader/utils/AppStrings.dart';
 import 'package:document_reader/utils/common_functions.dart';
@@ -13,20 +12,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../splash/splash_screen.dart';
+
 class OnBoarding extends StatefulWidget {
   const OnBoarding({super.key});
 
   @override
-  State<OnBoarding> createState() => _OnBoardingState();
+  State<OnBoarding> createState() => OnBoardingState();
 }
 
-class _OnBoardingState extends State<OnBoarding> {
+class OnBoardingState extends State<OnBoarding> {
   final PrefsRepo prefsRepo = PrefsRepo();
   final PageController _pageController = PageController();
+
   @override
   void initState() {
     super.initState();
-    checkInternetConnection();
+    checkInternetConnection(context: context);
   }
 
   @override
@@ -66,18 +68,20 @@ class _OnBoardingState extends State<OnBoarding> {
       create: (context) => OnboardingBloc(),
       child: BlocConsumer(
         bloc: onboardingBloc,
-        listener: (context, OnboardingState state) {
+        listener: (context, OnboardingState1 state) {
           if (state is GetOnboardingIndexState) {
             currentPageIndex = state.pageIndex ?? 0;
           }
         },
         builder: (context, state) {
           return Scaffold(
+            key: const Key("onboarding"),
             body: SafeArea(
               child: Column(
                 children: [
                   Expanded(
                     child: PageView.builder(
+                      key: const ValueKey('pageview'),
                       controller: _pageController,
                       itemCount: onboardingData.length,
                       onPageChanged: (int index) {
@@ -123,6 +127,7 @@ class _OnBoardingState extends State<OnBoarding> {
                             ? SizedBox(height: 40.h, width: 40.h)
                             : InkWell(
                                 onTap: () {
+                                  onboardingBloc.add(GetOnboardingIndexEvent(pageIndex: currentPageIndex - 1));
                                   _pageController.previousPage(
                                     duration: const Duration(milliseconds: 300),
                                     curve: Curves.easeIn,
@@ -152,6 +157,7 @@ class _OnBoardingState extends State<OnBoarding> {
                         ),
                         const Spacer(),
                         InkWell(
+                          key: const ValueKey('onboarding_next_button'),
                           onTap: () {
                             _pageController.nextPage(
                               duration: const Duration(milliseconds: 300),
@@ -162,7 +168,14 @@ class _OnBoardingState extends State<OnBoarding> {
                                 key: PrefsRepo.onboarding,
                                 value: true,
                               );
-                              navigatorPush(const SplashScreen());
+                              navigatorPush(context: context, navigate: const SplashScreen());
+                              // Navigator.of(context).pushReplacement(
+                              //   MaterialPageRoute(
+                              //     builder: (context) => const SplashScreen(),
+                              //   ),
+                              // );
+                            } else {
+                              onboardingBloc.add(GetOnboardingIndexEvent(pageIndex: currentPageIndex + 1));
                             }
                           },
                           child: Container(

@@ -1,15 +1,16 @@
 // ignore_for_file: depend_on_referenced_packages
 
-import 'package:meta/meta.dart';
-import 'package:bloc/bloc.dart';
+import 'dart:io';
 
-import 'package:document_reader/src/file/model/files_data_model.dart';
+import 'package:bloc/bloc.dart';
 import 'package:document_reader/shared_Preference/preferences_helper.dart';
+import 'package:document_reader/src/file/model/files_data_model.dart';
+import 'package:meta/meta.dart';
 
 part 'home_event.dart';
 part 'home_state.dart';
 
-class HomeBloc extends Bloc<HomeEvent, HomeState> {
+class HomeBloc extends Bloc<HomeEvent, HomeBlocState> {
   HomeBloc() : super(HomeInitial()) {
     on<GetRecentData>((event, emit) async {
       emit(GetRecent(recentList: const [], bookmarkList: const []));
@@ -17,6 +18,28 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       List<FilesDataModel> recentList = [];
       List<FilesDataModel> bookmarkList = [];
       final PrefsRepo prefsRepo = PrefsRepo();
+
+      FilesDataModel data = FilesDataModel(
+        path: File("https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"),
+        name: "recent name.png",
+        count: "10",
+        size: "20",
+        date: DateTime.now().toString(),
+        selected: false,
+        bookmark: false,
+      );
+      FilesDataModel data1 = FilesDataModel(
+        path: File("https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"),
+        name: "bookmark name.png",
+        count: "10",
+        size: "20",
+        date: DateTime.now().toString(),
+        selected: false,
+        bookmark: true,
+      );
+
+      // prefsRepo.setRecentJson(data: data);
+      // prefsRepo.setBookmarkJson(data: data1);
 
       List<FilesDataModel> tempRecentList = await prefsRepo.getRecentJson();
       List<FilesDataModel> tempBookmarkList = await prefsRepo.getBookmarkJson();
@@ -42,16 +65,17 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
 
       emit(
         GetRecent(
-          recentList: tempRecentList,
-          bookmarkList: tempBookmarkList,
+          recentList: [data],
+          bookmarkList: [data1],
         ),
       );
     });
 
-    on<RecentTabEvent>((event, Emitter<HomeState> emit) {
+    on<RecentTabEvent>((RecentTabEvent event, Emitter<HomeBlocState> emit) {
       emit(RecentTabState(index: event.index));
     });
-    on<RecentBookmarkSelectedEvent>((event, Emitter<HomeState> emit) {
+
+    on<RecentBookmarkSelectedEvent>((RecentBookmarkSelectedEvent event, Emitter<HomeBlocState> emit) {
       emit(
         RecentBookmarkSelectedState(
           index: event.index,
@@ -61,7 +85,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       );
     });
 
-    on<ShowBottomMenuEvent>((event, Emitter<HomeState> emit) {
+    on<ShowBottomMenuEvent>((ShowBottomMenuEvent event, Emitter<HomeBlocState> emit) {
       emit(ShowBottomMenuState(selected: event.selected));
     });
   }

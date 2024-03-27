@@ -52,6 +52,9 @@ jobs:
       - run: flutter pub get
         name: Get dependencies
 
+      - run: Flutter Test
+        name: flutter test
+
       - run: flutter build apk
         name: Build APK
 

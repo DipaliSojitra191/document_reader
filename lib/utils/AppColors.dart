@@ -19,7 +19,6 @@ class ColorUtils {
 
   static Color black = const Color(0xFF000000);
 
-  static Color greyBEB = const Color(0xFFEBEBEB);
   static Color grey7FF = const Color(0xFFDDE7FF);
   static Color greyC0 = const Color(0xFFC0C0C0);
   static Color greyD7 = const Color(0xFFD7D7D7);
@@ -37,12 +36,6 @@ class ColorUtils {
 
   static Color red = const Color(0xFFCE0000);
   static Color red4C = const Color(0xFFFF4C4C);
-  static Color green = const Color(0xFF009B35);
   static Color white = const Color(0xFFFFFFFF);
   static Color transparent = Colors.transparent;
-
-  /// Shadow
-  static Color blueShade = const Color.fromRGBO(0, 133, 255, 0.25);
-  static Color blueShade156 = const Color.fromRGBO(156, 218, 255, 0.25);
-  static Color blackShade = const Color.fromRGBO(115, 115, 115, 0.25);
 }

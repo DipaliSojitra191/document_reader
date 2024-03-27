@@ -24,10 +24,10 @@ class SelectImages extends StatefulWidget {
   const SelectImages({super.key});
 
   @override
-  State<SelectImages> createState() => _SelectImagesState();
+  State<SelectImages> createState() => SelectImagesState();
 }
 
-class _SelectImagesState extends State<SelectImages> {
+class SelectImagesState extends State<SelectImages> {
   final SelectImageBloc selectImageBloc = SelectImageBloc();
 
   List<String> selectedAssets = [];
@@ -36,9 +36,9 @@ class _SelectImagesState extends State<SelectImages> {
   @override
   void initState() {
     super.initState();
-    selectImageBloc.add(FetchAssetsEvent());
+    selectImageBloc.add(FetchAssetsEvent(context: context));
 
-    checkInternetConnection();
+    checkInternetConnection(context: context);
   }
 
   @override
@@ -57,7 +57,7 @@ class _SelectImagesState extends State<SelectImages> {
           appBar: PreferredSize(
             preferredSize: const Size.fromHeight(kToolbarHeight + 1),
             child: CustomAppbar(
-              title: AppLocalizations.of(context)!.convert_image_to_pdf,
+              title: AppLocalizations.of(context)?.convert_image_to_pdf,
             ),
           ),
           body: Column(
@@ -65,7 +65,7 @@ class _SelectImagesState extends State<SelectImages> {
               if (state is FetchAssetsLoadingState)
                 const Expanded(child: Loader())
               else if (assets.isEmpty)
-                Expanded(child: Center(child: Text(AppLocalizations.of(context)!.imageNotFound)))
+                Expanded(child: Center(child: Text(AppLocalizations.of(context)?.imageNotFound ?? "")))
               else
                 Expanded(
                   child: Column(
@@ -151,13 +151,15 @@ class _SelectImagesState extends State<SelectImages> {
 
                             if (uInt8ListData.isNotEmpty) {
                               navigatorPush(
-                                ImageEditorScreen(
+                                context: context,
+                                navigate: ImageEditorScreen(
                                   uIntImageList: uInt8ListData,
                                   selectedAssets: selectedAssets,
                                 ),
                               );
                             } else {
                               showSnackBar(
+                                context: context,
                                 message: "Image not selected",
                                 errorSnackBar: true,
                               );

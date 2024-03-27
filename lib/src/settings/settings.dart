@@ -3,7 +3,6 @@ import 'package:document_reader/src/language/language.dart';
 import 'package:document_reader/src/settings/model/setting_model.dart';
 import 'package:document_reader/utils/AppColors.dart';
 import 'package:document_reader/utils/AppImages.dart';
-import 'package:document_reader/utils/common_appbar.dart';
 import 'package:document_reader/utils/common_functions.dart';
 import 'package:document_reader/utils/custom_btn.dart';
 import 'package:document_reader/utils/navigation.dart';
@@ -12,6 +11,8 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:share_plus/share_plus.dart';
+
+import '../../utils/common_appbar.dart';
 
 class Setting extends StatefulWidget {
   final VoidCallback onBackPress;
@@ -22,36 +23,51 @@ class Setting extends StatefulWidget {
   });
 
   @override
-  State<Setting> createState() => _SettingState();
+  State<Setting> createState() => SettingState();
 }
 
-class _SettingState extends State<Setting> {
+class SettingState extends State<Setting> {
   @override
   void initState() {
     super.initState();
-    checkInternetConnection();
+    checkInternetConnection(context: context);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
   }
 
   final PrefsRepo prefsRepo = PrefsRepo();
   List<SettingModel> settingList = [];
 
+  optionsTap(int index) {
+    if (index == 0) {
+      Share.shareUri(Uri.parse('https://play.google.com/store/apps/details?id=com.example.document_reader'));
+    } else if (index == 1) {
+      dialogData(context);
+    } else if (index == 2) {
+      Navigator.of(context).push(MaterialPageRoute(builder: (_) => const Language()));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     settingList = [
       SettingModel(
-        title: AppLocalizations.of(context)!.share,
+        title: AppLocalizations.of(context)?.share ?? '',
         img: IconStrings.share,
       ),
       SettingModel(
-        title: AppLocalizations.of(context)!.rateUs,
+        title: AppLocalizations.of(context)?.rateUs ?? '',
         img: IconStrings.rate,
       ),
       SettingModel(
-        title: AppLocalizations.of(context)!.language,
+        title: AppLocalizations.of(context)?.language ?? '',
         img: IconStrings.language,
       ),
       SettingModel(
-        title: AppLocalizations.of(context)!.privacyPolicy,
+        title: AppLocalizations.of(context)?.privacyPolicy ?? '',
         img: IconStrings.policy,
       ),
     ];
@@ -60,11 +76,12 @@ class _SettingState extends State<Setting> {
       canPop: false,
       onPopInvoked: (didPop) => widget.onBackPress(),
       child: Scaffold(
+        key: const Key('setting'),
         backgroundColor: ColorUtils.white,
         appBar: PreferredSize(
           preferredSize: const Size.fromHeight(kToolbarHeight + 1),
           child: CustomAppbar(
-            title: AppLocalizations.of(context)!.setting,
+            title: AppLocalizations.of(context)?.setting ?? '',
             onPress: () => widget.onBackPress(),
           ),
         ),
@@ -76,21 +93,15 @@ class _SettingState extends State<Setting> {
             return Column(
               children: [
                 ListTile(
-                  onTap: () async {
-                    if (index == 0) {
-                      Share.shareUri(Uri.parse('https://play.google.com/store/apps/details?id=com.example.document_reader'));
-                    } else if (index == 1) {
-                      dialogData(context);
-                    } else if (index == 2) {
-                      navigatorPush(const Language());
-                    }
-                  },
+                  key: Key('setting-$index'),
+                  onTap: () => optionsTap(index),
                   leading: SizedBox(
                     width: 40.w,
                     height: 40.w,
                     child: Image.asset(settingList[index].img),
                   ),
                   title: Text(
+                    key: Key(settingList[index].title),
                     settingList[index].title,
                     style: Theme.of(context).textTheme.displaySmall,
                   ),
@@ -106,10 +117,10 @@ class _SettingState extends State<Setting> {
 
   dialogData(BuildContext context) {
     int img = 1;
-    String title1 = AppLocalizations.of(context)!.thankYou;
-    String desc1 = AppLocalizations.of(context)!.rateUsDesc;
-    String title2 = AppLocalizations.of(context)!.appreciation;
-    String desc2 = AppLocalizations.of(context)!.motivation;
+    String title1 = AppLocalizations.of(context)?.thankYou ?? '';
+    String desc1 = AppLocalizations.of(context)?.rateUsDesc ?? '';
+    String title2 = AppLocalizations.of(context)?.appreciation ?? '';
+    String desc2 = AppLocalizations.of(context)?.motivation ?? '';
 
     double rat = prefsRepo.getInt(key: PrefsRepo.rate).toDouble();
 
@@ -119,11 +130,13 @@ class _SettingState extends State<Setting> {
     String title = '';
     String subtitle = '';
 
+    bool isTitle2 = rat > 3 && rat < 6;
+
     showDialog(
       context: context,
       builder: (context) {
         return StatefulBuilder(builder: (context, setStat) {
-          if (rat > 3 && rat < 6) {
+          if (isTitle2) {
             title = title2;
             subtitle = desc2;
             img = 2;
@@ -134,6 +147,7 @@ class _SettingState extends State<Setting> {
           }
 
           return Dialog(
+            key: const Key("ratting-dialog"),
             insetPadding: EdgeInsets.all(20.w),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(padding),
@@ -141,7 +155,9 @@ class _SettingState extends State<Setting> {
             elevation: 0.0,
             backgroundColor: Colors.transparent,
             child: Stack(
+              key: Key(isTitle2 ? "Title 2" : "Title 1"),
               children: <Widget>[
+                Text(AppLocalizations.of(context)?.thankYou ?? "null 6", key: const Key("test")),
                 Container(
                   width: 380.w,
                   padding: const EdgeInsets.only(
@@ -161,6 +177,7 @@ class _SettingState extends State<Setting> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
+                        key: const Key("title"),
                         title,
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.displayMedium?.copyWith(fontSize: 17.sp),
@@ -168,50 +185,51 @@ class _SettingState extends State<Setting> {
                       Padding(
                         padding: EdgeInsets.only(top: 8.h, bottom: 15.h),
                         child: Text(
+                          key: const Key("subtitle"),
                           subtitle,
                           textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                                fontSize: 14.sp,
-                                fontWeight: FontWeight.normal,
-                              ),
+                          style: Theme.of(context).textTheme.displaySmall?.copyWith(fontWeight: FontWeight.normal),
                         ),
                       ),
-                      RatingBar(
-                        glow: false,
-                        itemCount: 5,
-                        initialRating: rat,
-                        allowHalfRating: false,
-                        direction: Axis.horizontal,
-                        ratingWidget: RatingWidget(
-                          full: Image.asset(IconStrings.starFilled),
-                          empty: Image.asset(IconStrings.star),
-                          half: Image.asset(""),
+                      Container(
+                        key: const Key("ratting"),
+                        child: RatingBar(
+                          glow: false,
+                          itemCount: 5,
+                          initialRating: rat,
+                          allowHalfRating: false,
+                          direction: Axis.horizontal,
+                          ratingWidget: RatingWidget(
+                            full: Image.asset(IconStrings.starFilled),
+                            empty: Image.asset(IconStrings.star),
+                            half: Image.asset(""),
+                          ),
+                          itemSize: 28.w,
+                          itemPadding: const EdgeInsets.symmetric(horizontal: 8.0),
+                          onRatingUpdate: (rating) {
+                            if (rat > 3 && rat < 6) {
+                              title = title2;
+                              subtitle = desc2;
+                              img = 2;
+                            } else {
+                              title = title1;
+                              subtitle = desc1;
+                              img = 1;
+                            }
+                            rat = rating;
+                            setStat(() {});
+                          },
                         ),
-                        itemSize: 28.w,
-                        itemPadding: const EdgeInsets.symmetric(horizontal: 8.0),
-                        onRatingUpdate: (rating) {
-                          if (rat > 3 && rat < 6) {
-                            title = title2;
-                            subtitle = desc2;
-                            img = 2;
-                          } else {
-                            title = title1;
-                            subtitle = desc1;
-                            img = 1;
-                          }
-                          rat = rating;
-                          setStat(() {});
-                        },
                       ),
                       SizedBox(height: 15.h),
                       CustomBtn(
                         onTap: rat == 0.0
-                            ? null
+                            ? () {}
                             : () {
                                 prefsRepo.setInt(key: PrefsRepo.rate, value: rat.toInt());
-                                navigateBack();
+                                navigateBack(context: context);
                               },
-                        title: AppLocalizations.of(context)!.rate,
+                        title: AppLocalizations.of(context)?.rate ?? '',
                         height: 38.h,
                         width: 160.w,
                         radius: 30.w,

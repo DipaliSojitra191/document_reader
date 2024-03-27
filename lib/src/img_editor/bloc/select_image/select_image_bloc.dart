@@ -17,7 +17,7 @@ class SelectImageBloc extends Bloc<SelectImageEvent, SelectImageState> {
     List<SelectImageModel> assets = [];
 
     try {
-      await storagePermission();
+      await storagePermission(context: event.context);
       await PhotoManager.requestPermissionExtend();
       List<AssetPathEntity> albums = await PhotoManager.getAssetPathList(type: RequestType.image);
 

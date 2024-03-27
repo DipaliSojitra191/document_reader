@@ -18,10 +18,10 @@ class Language extends StatefulWidget {
   const Language({super.key});
 
   @override
-  State<Language> createState() => _LanguageState();
+  State<Language> createState() => LanguageState();
 }
 
-class _LanguageState extends State<Language> {
+class LanguageState extends State<Language> {
   final LanguageBloc languageBloc = LanguageBloc();
   String selected = languageList[0].title;
 
@@ -29,28 +29,34 @@ class _LanguageState extends State<Language> {
   void initState() {
     super.initState();
 
-    checkInternetConnection();
+    checkInternetConnection(context: context);
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
       languageBloc.add(SetLanguageEvent());
     });
+  }
+
+  languageOnTap(String title) {
+    languageBloc.add(SetLanguageEvent(title: title));
   }
 
   @override
   Widget build(BuildContext context) {
     return BlocConsumer(
       bloc: languageBloc,
-      listener: (context, LanguageState state) {
+      listener: (context, LanguageBlocState state) {
         if (state is SetLanguageState) {
           selected = state.language;
         }
       },
       builder: (context, state) {
         return Scaffold(
+          key: const Key("language"),
           appBar: PreferredSize(
             preferredSize: const Size.fromHeight(kToolbarHeight + 1),
             child: CustomAppbar(
-              title: AppLocalizations.of(context)!.language,
-              onPress: () => removeRoute(const BottomBar(currentindex: 2)),
+              key: const Key("languageAppBar"),
+              title: AppLocalizations.of(context)?.language ?? '',
+              onPress: () => removeRoute(const BottomBarScreen(currentindex: 2), context: context),
             ),
           ),
           body: ListView.builder(
@@ -63,7 +69,8 @@ class _LanguageState extends State<Language> {
               return Padding(
                 padding: EdgeInsets.all(8.h),
                 child: InkWell(
-                  onTap: () => languageBloc.add(SetLanguageEvent(title: title)),
+                  key: Key(title),
+                  onTap: () => languageOnTap(title),
                   borderRadius: BorderRadius.circular(10.r),
                   child: Container(
                     padding: EdgeInsets.symmetric(

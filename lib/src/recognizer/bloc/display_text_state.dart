@@ -1,8 +1,8 @@
-abstract class DisplayTextState {}
+abstract class DisplayTextBlocState {}
 
-class DisplayTextInitial extends DisplayTextState {}
+class DisplayTextInitial extends DisplayTextBlocState {}
 
-class DisplayTextEditState extends DisplayTextState {
+class DisplayTextEditState extends DisplayTextBlocState {
   final bool? isEdit;
 
   DisplayTextEditState({this.isEdit});

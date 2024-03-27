@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:document_reader/shared_Preference/preferences_helper.dart';
 import 'package:document_reader/src/onboarding/onboarding.dart';
-import 'package:document_reader/src/splash/splash_Screen.dart';
+import 'package:document_reader/src/splash/splash_screen.dart';
 import 'package:document_reader/utils/common_functions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -15,12 +15,8 @@ import 'app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  SystemChrome.setPreferredOrientations(
-    [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown],
-  );
+  SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]).then((value) => runApp(const MyApp()));
   await PrefsRepo.init();
-  // runApp(const Test());
-  runApp(const MyApp());
 }
 
 StreamController<Locale> languageStream = StreamController();
@@ -61,7 +57,7 @@ class _MyAppState extends State<MyApp> {
     super.initState();
 
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
-      checkInternetConnection();
+      checkInternetConnection(context: context);
     });
   }
 

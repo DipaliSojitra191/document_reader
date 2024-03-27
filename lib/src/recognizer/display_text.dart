@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:clipboard/clipboard.dart';
 import 'package:document_reader/src/recognizer/bloc/display_text_bloc.dart';
 import 'package:document_reader/src/recognizer/bloc/display_text_event.dart';
@@ -19,14 +21,14 @@ class DisplayText extends StatefulWidget {
   const DisplayText({super.key, required this.text});
 
   @override
-  State<DisplayText> createState() => _DisplayTextState();
+  State<DisplayText> createState() => DisplayTextState();
 }
 
-class _DisplayTextState extends State<DisplayText> {
+class DisplayTextState extends State<DisplayText> {
   @override
   void initState() {
     super.initState();
-    checkInternetConnection();
+    checkInternetConnection(context: context);
   }
 
   final DisplayTextBloc displayTextBloc = DisplayTextBloc();
@@ -35,18 +37,38 @@ class _DisplayTextState extends State<DisplayText> {
   final controller = TextEditingController();
   final FocusNode _focus = FocusNode();
   int count = 5;
+
+  getLength(String text) {
+    List<String> words = text.split(' ');
+
+    List<String> lines = [];
+    String currentLine = '';
+
+    for (String word in words) {
+      if ((currentLine.length + word.length) <= 28) {
+        currentLine += (currentLine.isEmpty ? '' : ' ') + word;
+      } else {
+        lines.add(currentLine);
+        currentLine = word;
+      }
+    }
+
+    if (currentLine.isNotEmpty) {
+      lines.add(currentLine);
+    }
+    return lines.length < 6 ? 5 : lines.length;
+  }
+
   @override
   Widget build(BuildContext context) {
     if (controller.text.isEmpty) {
       controller.text = widget.text;
-      String text = controller.text;
-      int numberOfLines = (text.length / 27).ceil();
-      count = numberOfLines;
+      count = getLength(controller.text);
     }
 
     return BlocConsumer(
       bloc: displayTextBloc,
-      listener: (context, DisplayTextState state) {
+      listener: (context, DisplayTextBlocState state) {
         if (state is DisplayTextEditState) {
           isEdit = state.isEdit ?? false;
           if (isEdit) {
@@ -61,11 +83,12 @@ class _DisplayTextState extends State<DisplayText> {
           appBar: PreferredSize(
             preferredSize: const Size.fromHeight(kToolbarHeight + 1),
             child: CustomAppbar(
-              title: AppLocalizations.of(context)!.recognizeText,
+              title: AppLocalizations.of(context)?.recognizeText ?? "",
               action: !isEdit
                   ? []
                   : [
                       IconButton(
+                        key: const Key("close-btn"),
                         onPressed: () {
                           displayTextBloc.add(DisplayTextEdit(isEdit: false));
                         },
@@ -103,39 +126,45 @@ class _DisplayTextState extends State<DisplayText> {
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     InkWell(
+                      key: const Key("edit"),
                       onTap: () => displayTextBloc.add(DisplayTextEdit(isEdit: true)),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Image.asset(IconStrings.edit, width: 20.w),
+                          Image.asset(IconStrings.edit, width: 20.w, key: const Key("edit-image")),
                           SizedBox(height: 10.h),
-                          Text(AppLocalizations.of(context)!.edit),
+                          Text(AppLocalizations.of(context)?.edit ?? "", key: const Key("edit-text")),
                         ],
                       ),
                     ),
                     InkWell(
+                      key: const Key("copy"),
                       onTap: () {
-                        FlutterClipboard.copy(widget.text).then((value) {
-                          showSnackBar(message: AppLocalizations.of(context)!.copiedSuccessfully);
+                        FlutterClipboard.copy(widget.text).then((_) {
+                          showSnackBar(context: context, message: AppLocalizations.of(context)?.copiedSuccessfully ?? "");
                         });
                       },
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Image.asset(IconStrings.copy, width: 20.w),
+                          Image.asset(IconStrings.copy, width: 20.w, key: const Key("copy-image")),
                           SizedBox(height: 10.h),
-                          Text(AppLocalizations.of(context)!.copy),
+                          Text(AppLocalizations.of(context)?.copy ?? "", key: const Key("copy-text")),
                         ],
                       ),
                     ),
                     InkWell(
-                      onTap: () => Share.share(widget.text),
+                      key: const Key("share"),
+                      onTap: () {
+                        log("share btn tap");
+                        Share.share(widget.text);
+                      },
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Image.asset(IconStrings.share1, width: 20.w),
+                          Image.asset(IconStrings.share1, width: 20.w, key: const Key("share-image")),
                           SizedBox(height: 10.h),
-                          Text(AppLocalizations.of(context)!.share),
+                          Text(AppLocalizations.of(context)?.share ?? "", key: const Key("share-text")),
                         ],
                       ),
                     ),

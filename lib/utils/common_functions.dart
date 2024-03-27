@@ -9,7 +9,6 @@ import 'package:document_reader/utils/AppStrings.dart';
 import 'package:document_reader/utils/custom_data/custom_bottomsheet.dart';
 import 'package:document_reader/utils/custom_snackbar.dart';
 import 'package:document_reader/utils/logs.dart';
-import 'package:document_reader/utils/navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -19,9 +18,9 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:share_plus/share_plus.dart';
 
 /// Permission
-Future<bool> storagePermission() async {
+Future<bool> storagePermission({required BuildContext context}) async {
   try {
-    String permiMessage = AppLocalizations.of(currentContext)!.permissionRequired;
+    String permiMessage = AppLocalizations.of(context)?.permissionRequired ?? "";
     if (Platform.isIOS) {
       await Permission.storage.request();
       return (await Permission.storage.status) == PermissionStatus.granted;
@@ -32,7 +31,7 @@ Future<bool> storagePermission() async {
       bool s = await Permission.manageExternalStorage.status == PermissionStatus.granted;
 
       if (s1 == false || s == false) {
-        showSnackBar(message: permiMessage);
+        showSnackBar(message: permiMessage, context: context);
       }
 
       return s1 == true && s == true;
@@ -44,23 +43,17 @@ Future<bool> storagePermission() async {
 }
 
 /// File format converter
-Future<String> uIntListToPath({
-  required Uint8List imageBytes,
-  String? name,
-}) async {
+Future<String> uIntListToPath({required Uint8List imageBytes}) async {
   final Directory tempDir = await getTemporaryDirectory();
 
-  final String tempFileName = name ?? '${DateTime.now().toLocal().microsecondsSinceEpoch}.png';
+  final String tempFileName = '${DateTime.now().toLocal().microsecondsSinceEpoch}.png';
 
   final File tempFile = File('${tempDir.path}/$tempFileName');
   await tempFile.writeAsBytes(imageBytes);
   return tempFile.path;
 }
 
-Future<Uint8List> pathToUIntList({
-  required String path,
-  String? name,
-}) async {
+Future<Uint8List> pathToUIntList({required String path}) async {
   List<int> bytes = await File(path).readAsBytes();
   return Uint8List.fromList(bytes);
 }
@@ -93,50 +86,50 @@ class GetTypeNameTitle {
   GetTypeNameTitle({required this.image, required this.title, required this.fileType});
 }
 
-GetTypeNameTitle getTypeAndTitle(index) {
-  String image = "";
-  String fileType = "";
-  String title = "";
+GetTypeNameTitle getTypeAndTitle({required BuildContext context, required int index}) {
+  String image = IconStrings.all;
+  String fileType = AppLocalizations.of(context)?.allFiles ?? '';
+  String title = "all";
 
   switch (index) {
     case 0:
       image = IconStrings.all;
-      title = AppLocalizations.of(currentContext)!.allFiles;
+      title = AppLocalizations.of(context)?.allFiles ?? '';
       fileType = 'all';
       break;
     case 1:
       image = IconStrings.pdf;
-      title = AppLocalizations.of(currentContext)!.pdfFiles;
+      title = AppLocalizations.of(context)?.pdfFiles ?? '';
       fileType = 'pdf';
       break;
     case 2:
       image = IconStrings.word;
-      title = AppLocalizations.of(currentContext)!.wordFiles;
+      title = AppLocalizations.of(context)?.wordFiles ?? '';
       fileType = 'word';
       break;
     case 3:
       image = IconStrings.ppt;
-      title = AppLocalizations.of(currentContext)!.pptFiles;
+      title = AppLocalizations.of(context)?.pptFiles ?? '';
       fileType = 'ppt';
       break;
     case 4:
       image = IconStrings.excel;
-      title = AppLocalizations.of(currentContext)!.excelFiles;
+      title = AppLocalizations.of(context)?.excelFiles ?? '';
       fileType = 'excel';
       break;
     case 5:
       image = IconStrings.text;
-      title = AppLocalizations.of(currentContext)!.txtFiles;
+      title = AppLocalizations.of(context)?.txtFiles ?? '';
       fileType = 'text';
       break;
     case 6:
       image = IconStrings.image;
-      title = AppLocalizations.of(currentContext)!.imageFiles;
+      title = AppLocalizations.of(context)?.imageFiles ?? '';
       fileType = 'image';
       break;
     case 7:
       image = IconStrings.directories;
-      title = AppLocalizations.of(currentContext)!.directories;
+      title = AppLocalizations.of(context)?.directories ?? '';
       fileType = 'Directories';
       break;
     default:
@@ -169,13 +162,14 @@ String getImageFromExt(String ext, {bool? isFolder}) {
 }
 
 /// File operation
-Future<void> shareFile({required List<File> path}) async {
+Future<void> shareFile({required List<String> path}) async {
   List<XFile> filePath = [];
   for (var element in path) {
-    filePath.add(XFile(element.path));
+    filePath.add(XFile(element));
   }
 
   try {
+    debugPrint("share file..");
     final result = await Share.shareXFiles(filePath);
     if (result.status == ShareResultStatus.success) {
       logs(message: 'Thank you for sharing the files!');
@@ -185,8 +179,9 @@ Future<void> shareFile({required List<File> path}) async {
   }
 }
 
-Future<Map> renameFile(String oldFilePath, String newFileName) async {
+Future<Map> renameFile({required String oldFilePath, required String newFileName, required BuildContext context}) async {
   File oldFile = File(oldFilePath);
+  debugPrint("rename file..");
   try {
     if (oldFile.existsSync()) {
       String ext = oldFile.path.split(".").last;
@@ -194,7 +189,7 @@ Future<Map> renameFile(String oldFilePath, String newFileName) async {
       String newFilePath = '$directory/$newFileName.$ext';
 
       oldFile.renameSync(newFilePath);
-      showSnackBar(message: "File rename successfully");
+      showSnackBar(message: "File rename successfully", context: context);
       return {"old": oldFilePath, "new": newFilePath};
     } else {
       logs(message: "File not found");
@@ -208,6 +203,7 @@ Future<Map> renameFile(String oldFilePath, String newFileName) async {
 
 Future<bool> deleteFile(String path) async {
   File oldFile = File(path);
+  debugPrint("delete file..");
   if (oldFile.existsSync()) {
     try {
       oldFile.deleteSync();
@@ -221,17 +217,18 @@ Future<bool> deleteFile(String path) async {
   }
 }
 
-Future openFileOnTap({required FilesDataModel data}) async {
+Future openFileOnTap({required FilesDataModel data, required BuildContext context}) async {
   try {
     final result = await OpenFile.open(data.path.path);
     logs(message: "File open.. ${result.message}");
 
-    if (result.type.name != "done") {
-      fileNotSupportBottomSheet();
+    if (result.type.name == "done") {
+      PrefsRepo().setRecentJson(data: data);
+    } else {
+      fileNotSupportBottomSheet(context: context);
     }
-    PrefsRepo().setRecentJson(data: data);
   } catch (e) {
-    fileNotSupportBottomSheet();
+    fileNotSupportBottomSheet(context: context);
   }
 }
 
@@ -269,7 +266,7 @@ Future addToBookmark({
 }
 
 /// internet connectivity
-Future<bool> checkInternetConnection() async {
+Future<bool> checkInternetConnection({required BuildContext context}) async {
   bool dialogOpen = false;
   final Connectivity connectivity = Connectivity();
   try {
@@ -282,13 +279,14 @@ Future<bool> checkInternetConnection() async {
     if (result == ConnectivityResult.none) {
       dialogOpen = true;
       internetDialog(
+        context: context,
         okTap: () {
           dialogOpen = false;
         },
       );
     } else {
       if (dialogOpen == true) {
-        navigateBack();
+        Navigator.pop(context);
         dialogOpen = false;
       }
     }
@@ -301,13 +299,13 @@ Future<bool> checkInternetConnection() async {
   }
 }
 
-void internetDialog({required VoidCallback okTap}) {
+void internetDialog({required VoidCallback okTap, required BuildContext context}) {
   showDialog(
-    context: currentContext,
+    context: context,
     builder: (BuildContext context) {
       return AlertDialog(
-        title: Text(AppLocalizations.of(currentContext)!.noConnectionError),
-        content: Text(AppLocalizations.of(currentContext)!.checkInternetConnectivity),
+        title: Text(AppLocalizations.of(context)?.noConnectionError ?? ""),
+        content: Text(AppLocalizations.of(context)?.checkInternetConnectivity ?? ""),
         actions: <Widget>[
           TextButton(
             child: Text(AppLocalizations.of(context)!.ok),

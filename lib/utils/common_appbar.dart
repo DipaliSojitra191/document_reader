@@ -41,23 +41,23 @@ class CustomAppbar extends StatelessWidget {
             systemOverlayStyle: const SystemUiOverlayStyle(statusBarBrightness: Brightness.light),
             primary: true,
             backgroundColor: ColorUtils.white,
-            leading: hideLeading ?? false
-                ? const SizedBox()
-                : IconButton(
-                    key: const ValueKey("sameKey"),
-                    onPressed: () {
-                      if (onPress != null) {
-                        onPress!();
-                      } else {
-                        navigateBack();
-                      }
-                    },
-                    icon: Transform.rotate(
+            leading: IconButton(
+              key: const Key("back-btn"),
+              onPressed: () {
+                if (onPress != null) {
+                  onPress!();
+                } else {
+                  navigateBack(context: context);
+                }
+              },
+              icon: hideLeading ?? false
+                  ? const SizedBox()
+                  : Transform.rotate(
                       angle: language == StringUtils.arabic ? 0 : 0,
                       child: const Icon(Icons.arrow_back_ios_new),
                     ),
-                  ),
-            title: child ?? Text(title ?? '', maxLines: 1),
+            ),
+            title: child ?? Text(title ?? "", maxLines: 1, key: const Key('text')),
             actions: action ?? [],
           ),
           Divider(color: ColorUtils.black, height: 1),

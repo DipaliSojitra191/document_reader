@@ -142,6 +142,12 @@ class PrefsRepo {
   Future<void> setBookmarkJson({required FilesDataModel data}) async {
     List<FilesDataModel> bookmarkList = await getBookmarkJson();
 
+    for (int i = 0; i < bookmarkList.length; i++) {
+      if (bookmarkList[i].path.path == data.path.path) {
+        bookmarkList.removeAt(i);
+      }
+    }
+
     bookmarkList.add(
       FilesDataModel(
         count: data.count,

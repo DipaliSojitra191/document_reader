@@ -1,11 +1,11 @@
 part of 'home_bloc.dart';
 
 @immutable
-abstract class HomeState {}
+abstract class HomeBlocState {}
 
-class HomeInitial extends HomeState {}
+class HomeInitial extends HomeBlocState {}
 
-class GetRecent extends HomeState {
+class GetRecent extends HomeBlocState {
   final List<FilesDataModel> recentList;
   final List<FilesDataModel> bookmarkList;
 
@@ -15,13 +15,13 @@ class GetRecent extends HomeState {
   });
 }
 
-class RecentTabState extends HomeState {
+class RecentTabState extends HomeBlocState {
   final int index;
 
   RecentTabState({required this.index});
 }
 
-class RecentBookmarkSelectedState extends HomeState {
+class RecentBookmarkSelectedState extends HomeBlocState {
   final bool selected;
   final bool isBookmark;
   final int index;
@@ -33,7 +33,7 @@ class RecentBookmarkSelectedState extends HomeState {
   });
 }
 
-class ShowBottomMenuState extends HomeState {
+class ShowBottomMenuState extends HomeBlocState {
   final bool selected;
 
   ShowBottomMenuState({required this.selected});

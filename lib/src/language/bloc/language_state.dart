@@ -1,8 +1,8 @@
-abstract class LanguageState {}
+abstract class LanguageBlocState {}
 
-class LanguageInitial extends LanguageState {}
+class LanguageInitial extends LanguageBlocState {}
 
-class SetLanguageState extends LanguageState {
+class SetLanguageState extends LanguageBlocState {
   final String language;
 
   SetLanguageState({required this.language});

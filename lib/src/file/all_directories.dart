@@ -43,7 +43,7 @@ class _DirectoriesScreenState extends State<DirectoriesScreen> {
   @override
   void initState() {
     super.initState();
-    checkInternetConnection();
+    checkInternetConnection(context: context);
 
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
       allFileBloc.add(DirSelectedEvent(index: 0));
@@ -52,7 +52,7 @@ class _DirectoriesScreenState extends State<DirectoriesScreen> {
 
   void getDocuments() {
     allFileBloc.add(
-      GetFileEvent(fileType: "all", selected1: 0, selected2: 0),
+      GetFileEvent(context: context, fileType: "all", selected1: 0, selected2: 0),
     );
   }
 
@@ -67,7 +67,7 @@ class _DirectoriesScreenState extends State<DirectoriesScreen> {
   Widget build(BuildContext context) {
     return BlocConsumer(
       bloc: allFileBloc,
-      listener: (context, AllFileState state) {
+      listener: (context, AllFileBlocState state) {
         if (state is GetDirState) {
           allFiles = state.allFiles;
         } else if (state is GetFileState) {
@@ -103,7 +103,7 @@ class _DirectoriesScreenState extends State<DirectoriesScreen> {
                 if (search == true) {
                   allFileBloc.add(SearchOnTapEvent(search: false));
                 } else {
-                  navigateBack();
+                  navigateBack(context: context);
                 }
               },
               action: [
@@ -128,7 +128,7 @@ class _DirectoriesScreenState extends State<DirectoriesScreen> {
               child: search
                   ? CustomTextFormField(
                       padding: EdgeInsets.zero,
-                      hintText: AppLocalizations.of(context)!.search,
+                      hintText: AppLocalizations.of(context)?.search ?? "",
                       onChanged: (v) {
                         if (selected == 0) {
                           allFileBloc.add(
@@ -151,9 +151,9 @@ class _DirectoriesScreenState extends State<DirectoriesScreen> {
                   padding: EdgeInsets.symmetric(horizontal: 25.w, vertical: 15.h),
                   child: Row(
                     children: [
-                      menu(title: AppLocalizations.of(context)!.storage, index: 0),
+                      menu(title: AppLocalizations.of(context)?.storage ?? "", index: 0),
                       SizedBox(width: 10.w),
-                      menu(title: AppLocalizations.of(context)!.allDocuments, index: 1),
+                      menu(title: AppLocalizations.of(context)?.allDocuments ?? "", index: 1),
                     ],
                   ),
                 ),
@@ -163,7 +163,7 @@ class _DirectoriesScreenState extends State<DirectoriesScreen> {
                 Expanded(
                   child: Center(
                     child: Text(
-                      AppLocalizations.of(context)!.noDirectoriesFound,
+                      AppLocalizations.of(context)?.noDirectoriesFound ?? "",
                     ),
                   ),
                 )
@@ -186,14 +186,15 @@ class _DirectoriesScreenState extends State<DirectoriesScreen> {
                         onTap: () {
                           if (isFolder) {
                             navigatorPush(
-                              DirectoriesScreen(
+                              context: context,
+                              navigate: DirectoriesScreen(
                                 showMenu: false,
                                 path: data.path.path,
                                 title: data.name,
                               ),
                             );
                           } else {
-                            openFileOnTap(data: data);
+                            openFileOnTap(data: data, context: context);
                           }
                         },
                         leading: SizedBox(
@@ -212,13 +213,13 @@ class _DirectoriesScreenState extends State<DirectoriesScreen> {
                         title: Text(
                           data.name,
                           maxLines: 1,
-                          style: Theme.of(currentContext).textTheme.displaySmall,
+                          style: Theme.of(context).textTheme.displaySmall,
                         ),
                         subtitle: Builder(builder: (context) {
                           return Text(
                             "$date $time ${data.size}",
                             maxLines: 1,
-                            style: Theme.of(currentContext).textTheme.bodySmall,
+                            style: Theme.of(context).textTheme.bodySmall,
                           );
                         }),
                         trailing: (data.isFolder ?? false)
@@ -226,10 +227,11 @@ class _DirectoriesScreenState extends State<DirectoriesScreen> {
                                 onPressed: () {
                                   if (isFolder) {
                                     navigatorPush(
-                                      DirectoriesScreen(showMenu: false, path: data.path.path, title: data.name),
+                                      context: context,
+                                      navigate: DirectoriesScreen(showMenu: false, path: data.path.path, title: data.name),
                                     );
                                   } else {
-                                    openFileOnTap(data: data);
+                                    openFileOnTap(data: data, context: context);
                                   }
                                 },
                                 icon: const Icon(Icons.keyboard_arrow_right),
@@ -265,14 +267,15 @@ class _DirectoriesScreenState extends State<DirectoriesScreen> {
                         onTap: () {
                           if (isFolder) {
                             navigatorPush(
-                              DirectoriesScreen(
+                              context: context,
+                              navigate: DirectoriesScreen(
                                 showMenu: false,
                                 path: data.path.path,
                                 title: data.name,
                               ),
                             );
                           } else {
-                            openFileOnTap(data: data);
+                            openFileOnTap(data: data, context: context);
                           }
                         },
                         leading: SizedBox(
@@ -291,22 +294,23 @@ class _DirectoriesScreenState extends State<DirectoriesScreen> {
                         title: Text(
                           data.name,
                           maxLines: 1,
-                          style: Theme.of(currentContext).textTheme.displaySmall,
+                          style: Theme.of(context).textTheme.displaySmall,
                         ),
                         subtitle: Text(
                           "$date $time${data.size}",
                           maxLines: 1,
-                          style: Theme.of(currentContext).textTheme.bodySmall,
+                          style: Theme.of(context).textTheme.bodySmall,
                         ),
                         trailing: data.isFolder ?? false
                             ? IconButton(
                                 onPressed: () {
                                   if (isFolder) {
                                     navigatorPush(
-                                      DirectoriesScreen(showMenu: false, path: data.path.path, title: data.name),
+                                      context: context,
+                                      navigate: DirectoriesScreen(showMenu: false, path: data.path.path, title: data.name),
                                     );
                                   } else {
-                                    openFileOnTap(data: data);
+                                    openFileOnTap(data: data, context: context);
                                   }
                                 },
                                 icon: const Icon(Icons.keyboard_arrow_right),
@@ -339,7 +343,7 @@ class _DirectoriesScreenState extends State<DirectoriesScreen> {
         decoration: selected == index ? BoxDecoration(gradient: commonGradient()) : BoxDecoration(color: ColorUtils.greyEEE),
         child: Text(
           title,
-          style: Theme.of(currentContext).textTheme.bodyMedium!.copyWith(
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: selected == index ? ColorUtils.white : ColorUtils.grey696,
               ),
         ),
@@ -357,12 +361,14 @@ class CommonListTile extends StatelessWidget {
   final VoidCallback selectOptionOnTap;
   final VoidCallback onLongPress;
   final bool selectAll;
+  final int index;
   final bool showRename;
   final VoidCallback? moveOutOnTap;
 
   const CommonListTile({
     super.key,
     required this.data,
+    required this.index,
     required this.showRename,
     required this.onLongPress,
     required this.getFilesOnTap,
@@ -378,35 +384,39 @@ class CommonListTile extends StatelessWidget {
       data.name.split(".").last,
       isFolder: data.isFolder,
     );
-
     final date = DateFormat('yyyy-MM-dd').format(DateTime.parse(data.date));
     final time = DateFormat('H:mm a').format(DateTime.parse(data.date));
     return ListTile(
       contentPadding: EdgeInsets.symmetric(horizontal: 15.w),
       onLongPress: () => onLongPress(),
-      onTap: () => selectAll ? selectOptionOnTap() : openFileOnTap(data: data),
+      key: Key("listTile-$index"),
+      onTap: () => selectAll ? selectOptionOnTap() : openFileOnTap(data: data, context: context),
       leading: Padding(
         padding: EdgeInsets.all(
           image.split("/").last == "outline_mcs.png" ? 8.w : 0.w,
         ),
-        child: Image.asset(image),
+        child: Image.asset(image, key: const Key("image")),
       ),
       title: Text(
+        key: const Key("title"),
         data.name,
         maxLines: 1,
         style: Theme.of(context).textTheme.displaySmall,
       ),
       subtitle: Text(
+        key: const Key("subtitle"),
         "$date $time ${data.size}",
         maxLines: 1,
         style: Theme.of(context).textTheme.bodySmall,
       ),
       trailing: selectAll
           ? InkWell(
+              key: const Key("selectOption"),
               onTap: () {
                 selectOptionOnTap();
               },
               child: Image.asset(
+                key: Key(!data.selected ? "no selected" : "selected"),
                 !data.selected ? IconStrings.unselectedOutline : IconStrings.selectedCircle,
                 width: 18.w,
               ),
@@ -415,16 +425,19 @@ class CommonListTile extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 InkWell(
+                  key: Key("bookmark-inkwell-$index"),
                   onTap: () {
                     bookmarkOnTap();
                   },
                   child: Icon(
+                    key: Key("bookmark-$index"),
                     Icons.bookmark,
                     color: data.bookmark ? ColorUtils.yellow00 : ColorUtils.greyDE,
                   ),
                 ),
                 SizedBox(width: 10.w),
                 InkWell(
+                  key: Key("more-$index"),
                   child: Icon(Icons.more_vert, color: ColorUtils.black),
                   onTap: () {
                     moreBottomSheet(
@@ -434,7 +447,7 @@ class CommonListTile extends StatelessWidget {
                       context: context,
                       allFiles: data,
                       getFilesOnTap: () => getFilesOnTap(),
-                      deleteOnTap: () => navigateBack(),
+                      deleteOnTap: () => navigateBack(context: context),
                     );
                   },
                 ),

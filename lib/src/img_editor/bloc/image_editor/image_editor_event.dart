@@ -1,4 +1,5 @@
 import 'package:document_reader/src/img_editor/image_editor.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 
 abstract class ImageEditorEvent {}
@@ -17,8 +18,9 @@ class SetCurrentIndexEvent extends ImageEditorEvent {
 
 class SaveImageEvent extends ImageEditorEvent {
   final List<Uint8List> imageList;
+  final BuildContext context;
 
-  SaveImageEvent({required this.imageList});
+  SaveImageEvent({required this.imageList, required this.context});
 }
 
 class ConvertPathToIIntListEvent extends ImageEditorEvent {

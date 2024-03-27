@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:document_reader/shared_Preference/preferences_helper.dart';
 import 'package:document_reader/src/bottombar/bottombar.dart';
 import 'package:document_reader/src/file/all_directories.dart';
@@ -23,64 +21,23 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-class Home extends StatefulWidget {
+class HomeScreen extends StatefulWidget {
   final VoidCallback onBackPress;
   final bool showMenu;
 
-  const Home({super.key, required this.onBackPress, required this.showMenu});
+  const HomeScreen({super.key, required this.onBackPress, required this.showMenu});
 
   @override
-  State<Home> createState() => _HomeState();
+  State<HomeScreen> createState() => HomeScreenState();
 }
 
-class _HomeState extends State<Home> {
-  int recentIndex = 0;
+class HomeScreenState extends State<HomeScreen> {
+  int tabIndex = 0;
 
   HomeBloc homeBloc = HomeBloc();
   final PrefsRepo prefsRepo = PrefsRepo();
 
-  List<FilesModel> filesList = [
-    FilesModel(
-      title: AppLocalizations.of(currentContext)!.allFiles,
-      color: ColorUtils.blueCFF,
-      ext: '',
-    ),
-    FilesModel(
-      title: AppLocalizations.of(currentContext)!.pdf,
-      color: ColorUtils.red4C,
-      ext: '.pdf',
-    ),
-    FilesModel(
-      title: AppLocalizations.of(currentContext)!.word,
-      color: ColorUtils.blueC9,
-      ext: '.word',
-    ),
-    FilesModel(
-      title: AppLocalizations.of(currentContext)!.ppt,
-      color: ColorUtils.orange4C,
-      ext: '.ppt',
-    ),
-    FilesModel(
-      title: AppLocalizations.of(currentContext)!.excel,
-      color: ColorUtils.green66,
-      ext: '.exls',
-    ),
-    FilesModel(
-      title: AppLocalizations.of(currentContext)!.text,
-      color: ColorUtils.pink9E,
-      ext: '.txt',
-    ),
-    FilesModel(
-      title: AppLocalizations.of(currentContext)!.imageDocument,
-      color: ColorUtils.blueF0,
-      ext: '.img',
-    ),
-    FilesModel(
-      title: AppLocalizations.of(currentContext)!.directories,
-      color: ColorUtils.yellowF0,
-      ext: '',
-    ),
-  ];
+  List<FilesModel> filesList = [];
 
   List<FilesDataModel> allFiles = [];
   final AllFileBloc allFileBloc = AllFileBloc();
@@ -88,7 +45,7 @@ class _HomeState extends State<Home> {
   getFiles() {
     allFiles.clear();
     allFileBloc.add(
-      GetFileEvent(fileType: "all", selected1: 0, selected2: 0),
+      GetFileEvent(context: context, fileType: "all", selected1: 0, selected2: 0),
     );
   }
 
@@ -104,7 +61,7 @@ class _HomeState extends State<Home> {
   @override
   void initState() {
     super.initState();
-    checkInternetConnection();
+    checkInternetConnection(context: context);
 
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
       getRecentData();
@@ -113,11 +70,54 @@ class _HomeState extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
+    filesList = [
+      FilesModel(
+        title: AppLocalizations.of(context)?.allFiles ?? '',
+        color: ColorUtils.blueCFF,
+        ext: '',
+      ),
+      FilesModel(
+        title: AppLocalizations.of(context)?.pdf ?? '',
+        color: ColorUtils.red4C,
+        ext: '.pdf',
+      ),
+      FilesModel(
+        title: AppLocalizations.of(context)?.word ?? '',
+        color: ColorUtils.blueC9,
+        ext: '.word',
+      ),
+      FilesModel(
+        title: AppLocalizations.of(context)?.ppt ?? '',
+        color: ColorUtils.orange4C,
+        ext: '.ppt',
+      ),
+      FilesModel(
+        title: AppLocalizations.of(context)?.excel ?? '',
+        color: ColorUtils.green66,
+        ext: '.exls',
+      ),
+      FilesModel(
+        title: AppLocalizations.of(context)?.text ?? '',
+        color: ColorUtils.pink9E,
+        ext: '.txt',
+      ),
+      FilesModel(
+        title: AppLocalizations.of(context)?.imageDocument ?? '',
+        color: ColorUtils.blueF0,
+        ext: '.img',
+      ),
+      FilesModel(
+        title: AppLocalizations.of(context)?.directories ?? '',
+        color: ColorUtils.yellowF0,
+        ext: '',
+      ),
+    ];
+
     return PopScope(
       canPop: false,
       onPopInvoked: (didPop) async {
-        if (recentIndex != 0) {
-          BottomBar.changeBottom(context, true);
+        if (tabIndex != 0) {
+          BottomBarScreen.showBottomBar(showBottom: true, context: context);
           homeBloc.add(RecentTabEvent(index: 0));
         } else {
           final bool status = await showExitConfirmationDialog(context);
@@ -126,30 +126,41 @@ class _HomeState extends State<Home> {
           }
         }
       },
-      child: BlocConsumer(
+      child: BlocConsumer<HomeBloc, HomeBlocState>(
         bloc: homeBloc,
-        listener: (context, state) {
-          if (state is GetRecent) {
-            recentList = state.recentList;
-            bookmarkList = state.bookmarkList;
+        listener: (context, HomeBlocState homeBlocState) {
+          if (homeBlocState is GetRecent) {
+            recentList = homeBlocState.recentList;
+            bookmarkList = homeBlocState.bookmarkList;
           }
-          if (state is RecentTabState) {
-            recentIndex = state.index;
+          if (homeBlocState is RecentTabState) {
+            tabIndex = homeBlocState.index;
+            selected = false;
+
+            for (var element in recentList) {
+              element.selected = false;
+            }
+            for (var element in bookmarkList) {
+              element.selected = false;
+            }
+            if (!mounted) {
+              BottomBarScreen.showBottomBar(showBottom: true, context: context);
+            }
           }
-          if (state is RecentBookmarkSelectedState) {
-            if (state.isBookmark == true) {
-              if (bookmarkList.length >= state.index) {
-                bookmarkList[state.index].selected = state.selected;
+          if (homeBlocState is RecentBookmarkSelectedState) {
+            if (homeBlocState.isBookmark == true) {
+              if (bookmarkList.length >= homeBlocState.index) {
+                bookmarkList[homeBlocState.index].selected = homeBlocState.selected;
               }
             } else {
-              if (recentList.length >= state.index) {
-                recentList[state.index].selected = state.selected;
+              if (recentList.length >= homeBlocState.index) {
+                recentList[homeBlocState.index].selected = homeBlocState.selected;
               }
             }
           }
-          if (state is ShowBottomMenuState) {
-            selected = state.selected;
-            BottomBar.changeBottom(context, !selected);
+          if (homeBlocState is ShowBottomMenuState) {
+            selected = homeBlocState.selected;
+            BottomBarScreen.showBottomBar(context: context, showBottom: !selected);
             for (var element in recentList) {
               element.selected = false;
             }
@@ -158,168 +169,180 @@ class _HomeState extends State<Home> {
             }
           }
         },
-        builder: (context, state) {
-          return BlocConsumer(
-              bloc: allFileBloc,
-              listener: (context, state) {
-                if (state is GetFileState) {
-                  allFiles = state.allFiles;
-                  getRecentData();
-                }
+        builder: (context, HomeBlocState homeBlocState) {
+          return BlocConsumer<AllFileBloc, AllFileBlocState>(
+            bloc: allFileBloc,
+            listener: (context, AllFileBlocState fileState) {
+              if (fileState is GetFileState) {
+                allFiles = fileState.allFiles;
+                getRecentData();
+              }
 
-                if (state is FileSelectState) {
-                  if (state.isBookmark == true) {
-                    bookmarkList[state.index].bookmark = state.selected;
-                    addToBookmark(
-                      data: bookmarkList[state.index],
-                      bookmark: state.selected,
-                    );
-                  } else {
-                    recentList[state.index].bookmark = state.selected;
+              if (fileState is FileSelectState) {
+                if (fileState.isBookmark == true) {
+                  bookmarkList[fileState.index].bookmark = fileState.selected;
+                  addToBookmark(
+                    data: bookmarkList[fileState.index],
+                    bookmark: fileState.selected,
+                  );
+                } else {
+                  recentList[fileState.index].bookmark = fileState.selected;
 
-                    addToBookmark(
-                      data: recentList[state.index],
-                      bookmark: state.selected,
-                    );
-                  }
+                  addToBookmark(
+                    data: recentList[fileState.index],
+                    bookmark: fileState.selected,
+                  );
                 }
-              },
-              builder: (context, state) {
-                return SafeArea(
-                  child: Scaffold(
-                    body: Column(
-                      children: [
-                        Expanded(
-                          child: SingleChildScrollView(
-                            child: Column(
-                              children: [
-                                recentTabBar(),
-                                SizedBox(height: 10.h),
-                                if (recentIndex == 1) recentData(),
-                                if (recentIndex == 2) bookmarkData(),
-                                if (recentIndex == 0) defaultData(),
-                                SizedBox(height: 10.h),
-                              ],
-                            ),
+              }
+            },
+            builder: (context, AllFileBlocState state) {
+              return SafeArea(
+                child: Scaffold(
+                  key: GlobalKey(),
+                  body: Column(
+                    children: [
+                      Expanded(
+                        child: SingleChildScrollView(
+                          child: Column(
+                            children: [
+                              tabBar(),
+                              SizedBox(height: 10.h),
+                              if (tabIndex == 1) recentData(),
+                              if (tabIndex == 2) bookmarkData(),
+                              if (tabIndex == 0) defaultData(),
+                              SizedBox(height: 10.h),
+                            ],
                           ),
                         ),
-                        if (widget.showMenu)
-                          Builder(builder: (context) {
-                            List<FilesDataModel> data = [];
-                            if (recentIndex == 1) {
-                              data = recentList;
-                            } else if (recentIndex == 2) {
-                              data = bookmarkList;
-                            }
+                      ),
+                      if (widget.showMenu)
+                        Builder(builder: (context) {
+                          List<FilesDataModel> data = [];
+                          if (tabIndex == 1) {
+                            data = recentList;
+                          } else if (tabIndex == 2) {
+                            data = bookmarkList;
+                          }
 
-                            bool isEmpty = data.where((element) => element.selected).isEmpty;
-                            Color color = isEmpty ? ColorUtils.greyAA : ColorUtils.primary;
-                            return SizedBox(
-                              height: 70.h,
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                mainAxisSize: MainAxisSize.max,
-                                children: [
-                                  Divider(color: ColorUtils.black),
-                                  Expanded(
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                                      children: [
-                                        InkWell(
-                                          onTap: () async {
-                                            List<File> path = [];
-                                            for (var element in data) {
-                                              if (element.selected) {
-                                                path.add(element.path);
-                                              }
+                          bool isEmpty = data.where((element) => element.selected).isEmpty;
+                          Color color = isEmpty ? ColorUtils.greyAA : ColorUtils.primary;
+                          return SizedBox(
+                            height: 70.h,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              mainAxisSize: MainAxisSize.max,
+                              children: [
+                                Divider(color: ColorUtils.black),
+                                Expanded(
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                    children: [
+                                      InkWell(
+                                        onTap: () async {
+                                          List<String> path = [];
+                                          for (var element in data) {
+                                            if (element.selected) {
+                                              path.add(element.path.path);
                                             }
+                                          }
 
-                                            shareFile(path: path);
-                                            selected = false;
-                                            BottomBar.changeBottom(context, false);
-                                          },
-                                          child: Column(
-                                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                            children: [
-                                              Image.asset(IconStrings.share1, width: 20.w, color: color),
-                                              Text(
-                                                AppLocalizations.of(context)!.share,
-                                                style: Theme.of(context).textTheme.bodySmall!.copyWith(color: color),
-                                              ),
-                                            ],
-                                          ),
+                                          shareFile(path: path);
+                                          selected = false;
+                                          BottomBarScreen.showBottomBar(context: context, showBottom: false);
+                                        },
+                                        child: Column(
+                                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                          children: [
+                                            Image.asset(IconStrings.share1, width: 20.w, color: color),
+                                            Text(
+                                              AppLocalizations.of(context)?.share ?? '',
+                                              style: Theme.of(context).textTheme.bodySmall!.copyWith(color: color),
+                                            ),
+                                          ],
                                         ),
-                                        InkWell(
-                                          onTap: () {
-                                            for (var element in data) {
-                                              if (element.selected) {
-                                                if (recentIndex == 1) {
-                                                  prefsRepo.deleteRecentJson(path: element.path.path);
-                                                } else if (recentIndex == 2) {
-                                                  prefsRepo.deleteBookmarkJson(path: element.path.path);
-                                                }
+                                      ),
+                                      InkWell(
+                                        onTap: () {
+                                          for (var element in data) {
+                                            if (element.selected) {
+                                              if (tabIndex == 1) {
+                                                prefsRepo.deleteRecentJson(path: element.path.path);
+                                              } else if (tabIndex == 2) {
+                                                prefsRepo.deleteBookmarkJson(path: element.path.path);
                                               }
                                             }
-                                            selected = false;
-                                            BottomBar.changeBottom(context, false);
-                                            getRecentData();
-                                          },
-                                          child: Column(
-                                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                            children: [
-                                              Image.asset(
-                                                isEmpty ? IconStrings.greyMoveOut : IconStrings.moveOut,
-                                                width: 20.w,
-                                              ),
-                                              Text(
-                                                AppLocalizations.of(context)!.moveOut,
-                                                style: Theme.of(context).textTheme.bodySmall!.copyWith(color: color),
-                                              ),
-                                            ],
-                                          ),
+                                          }
+                                          selected = false;
+                                          BottomBarScreen.showBottomBar(context: context, showBottom: false);
+                                          getRecentData();
+                                        },
+                                        child: Column(
+                                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                          children: [
+                                            Image.asset(
+                                              isEmpty ? IconStrings.greyMoveOut : IconStrings.moveOut,
+                                              width: 20.w,
+                                            ),
+                                            Text(
+                                              AppLocalizations.of(context)?.moveOut ?? '',
+                                              style: Theme.of(context).textTheme.bodySmall!.copyWith(color: color),
+                                            ),
+                                          ],
                                         ),
-                                        InkWell(
-                                          onTap: () {
-                                            for (var element in data) {
-                                              if (element.selected) {
-                                                deleteFile(element.path.path);
+                                      ),
+                                      InkWell(
+                                        onTap: () {
+                                          for (var element in data) {
+                                            if (element.selected) {
+                                              if (tabIndex == 1) {
+                                                prefsRepo.deleteRecentJson(path: element.path.path);
+                                              } else if (tabIndex == 2) {
+                                                prefsRepo.deleteBookmarkJson(path: element.path.path);
                                               }
                                             }
-                                            selected = false;
-                                            BottomBar.changeBottom(context, false);
-                                            getRecentData();
-                                          },
-                                          child: Column(
-                                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                            children: [
-                                              Image.asset(IconStrings.delete1, width: 20.w, color: color),
-                                              Text(
-                                                AppLocalizations.of(context)!.delete,
-                                                style: Theme.of(context).textTheme.bodySmall!.copyWith(color: color),
-                                              )
-                                            ],
-                                          ),
+                                          }
+
+                                          for (var element in data) {
+                                            if (element.selected) {
+                                              deleteFile(element.path.path);
+                                            }
+                                          }
+                                          getRecentData();
+                                          selected = false;
+                                          BottomBarScreen.showBottomBar(context: context, showBottom: true);
+                                        },
+                                        child: Column(
+                                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                          children: [
+                                            Image.asset(IconStrings.delete1, width: 20.w, color: color),
+                                            Text(
+                                              AppLocalizations.of(context)?.delete ?? '',
+                                              style: Theme.of(context).textTheme.bodySmall!.copyWith(color: color),
+                                            )
+                                          ],
                                         ),
-                                      ],
-                                    ),
+                                      ),
+                                    ],
                                   ),
-                                  Divider(color: ColorUtils.black),
-                                ],
-                              ),
-                            );
-                          }),
-                      ],
-                    ),
+                                ),
+                                Divider(color: ColorUtils.black),
+                              ],
+                            ),
+                          );
+                        }),
+                    ],
                   ),
-                );
-              });
+                ),
+              );
+            },
+          );
         },
       ),
     );
   }
 
-  Widget recentTabBar() {
+  Widget tabBar() {
     return Stack(
       children: [
         SizedBox(
@@ -337,15 +360,11 @@ class _HomeState extends State<Home> {
                   children: [
                     Expanded(
                       child: Text(
-                        AppLocalizations.of(context)!.allDocumentReader,
+                        AppLocalizations.of(context)?.allDocumentReader ?? '',
                         maxLines: 1,
-                        style: Theme.of(context).textTheme.displayMedium!.copyWith(color: ColorUtils.white),
+                        style: Theme.of(context).textTheme.displayMedium?.copyWith(color: ColorUtils.white),
                       ),
                     ),
-                    // Image.asset(
-                    //   IconStrings.search,
-                    //   scale: 4.5.w,
-                    // ),
                   ],
                 ),
               ),
@@ -355,20 +374,14 @@ class _HomeState extends State<Home> {
                 children: [
                   Container(
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: ColorUtils.white,
                       boxShadow: commonShadow(),
                       borderRadius: BorderRadius.circular(12.w),
                     ),
                     child: Row(
                       children: [
-                        recentTab(
-                          title: AppLocalizations.of(context)!.recent,
-                          count: 1,
-                        ),
-                        recentTab(
-                          title: AppLocalizations.of(context)!.bookmark,
-                          count: 2,
-                        ),
+                        tab(title: AppLocalizations.of(context)?.recent ?? '', count: 1),
+                        tab(title: AppLocalizations.of(context)?.bookmark ?? '', count: 2),
                       ],
                     ),
                   ),
@@ -383,48 +396,46 @@ class _HomeState extends State<Home> {
 
   Widget defaultData() {
     return Column(
-      children: [
-        Padding(
-          padding: EdgeInsets.only(top: 15.h),
-          child: GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3,
-              crossAxisSpacing: 20.h,
-              mainAxisSpacing: 20.h,
-              childAspectRatio: 0.8,
-            ),
-            itemCount: 6,
-            padding: EdgeInsets.symmetric(horizontal: 16.w),
-            itemBuilder: (BuildContext context, int index) {
-              final GetTypeNameTitle data = getTypeAndTitle(index);
+      children: filesList.isEmpty
+          ? []
+          : [
+              Padding(
+                padding: EdgeInsets.only(top: 15.h),
+                child: GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3,
+                    crossAxisSpacing: 20.h,
+                    mainAxisSpacing: 20.h,
+                    childAspectRatio: 0.8,
+                  ),
+                  itemCount: 6,
+                  padding: EdgeInsets.symmetric(horizontal: 16.w),
+                  itemBuilder: (BuildContext context, int index) {
+                    final GetTypeNameTitle data = getTypeAndTitle(context: context, index: index);
 
-              return filesMeni(
-                image: data.image,
-                title: data.title,
-                data: filesList[index],
-                fileType: data.fileType,
-              );
-            },
-          ),
-        ),
-        SizedBox(height: 20.h),
-        verticalTab(
-          data: filesList[6],
-          img: getTypeAndTitle(6).image,
-          title: getTypeAndTitle(6).title,
-          fileType: getTypeAndTitle(6).fileType,
-        ),
-        SizedBox(height: 20.h),
-        verticalTab(
-          data: filesList[7],
-          img: getTypeAndTitle(7).image,
-          title: getTypeAndTitle(7).title,
-          fileType: getTypeAndTitle(7).fileType,
-        ),
-        SizedBox(height: 5.h),
-      ],
+                    return filesMeni(
+                      image: data.image,
+                      title: data.title,
+                      data: filesList[index],
+                      fileType: data.fileType,
+                    );
+                  },
+                ),
+              ),
+              SizedBox(height: 20.h),
+              verticalTab(
+                data: filesList[6],
+                getTypeAndTitle: getTypeAndTitle(context: context, index: 6),
+              ),
+              SizedBox(height: 20.h),
+              verticalTab(
+                data: filesList[7],
+                getTypeAndTitle: getTypeAndTitle(context: context, index: 7),
+              ),
+              SizedBox(height: 5.h),
+            ],
     );
   }
 
@@ -434,7 +445,7 @@ class _HomeState extends State<Home> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(AppLocalizations.of(context)!.noDataFound),
+          Text(key: const Key("no-data"), AppLocalizations.of(context)?.noDataFound ?? ''),
         ],
       ),
     );
@@ -445,20 +456,23 @@ class _HomeState extends State<Home> {
       return noDataFound();
     }
     return Column(
+      key: const Key('recent-data'),
       children: [
         Padding(
           padding: EdgeInsets.symmetric(horizontal: 15.w),
           child: Row(
             children: [
               Text(
-                AppLocalizations.of(context)!.selected,
-                style: Theme.of(currentContext).appBarTheme.titleTextStyle,
+                key: const Key("recent-selected"),
+                AppLocalizations.of(context)?.selected ?? '',
+                style: Theme.of(context).appBarTheme.titleTextStyle,
               ),
               const Spacer(),
               InkWell(
                 onTap: () {
                   homeBloc.add(ShowBottomMenuEvent(selected: !selected));
                 },
+                key: const Key("recent-selected-all"),
                 child: Image.asset(
                   selected ? IconStrings.unselect : IconStrings.select,
                   height: 25.w,
@@ -477,6 +491,7 @@ class _HomeState extends State<Home> {
             final data = recentList[index];
 
             return CommonListTile(
+              index: index,
               showRename: false,
               data: data,
               selectAll: selected,
@@ -524,17 +539,20 @@ class _HomeState extends State<Home> {
       return noDataFound();
     }
     return Column(
+      key: const Key('bookmark-data'),
       children: [
         Padding(
           padding: EdgeInsets.symmetric(horizontal: 15.w),
           child: Row(
             children: [
               Text(
-                AppLocalizations.of(context)!.selected,
-                style: Theme.of(currentContext).appBarTheme.titleTextStyle,
+                key: const Key("bookmark-selected"),
+                AppLocalizations.of(context)?.selected ?? '',
+                style: Theme.of(context).appBarTheme.titleTextStyle,
               ),
               const Spacer(),
               InkWell(
+                key: const Key("bookmark-select-all"),
                 onTap: () {
                   homeBloc.add(ShowBottomMenuEvent(selected: !selected));
                 },
@@ -554,6 +572,7 @@ class _HomeState extends State<Home> {
           padding: const EdgeInsets.symmetric(vertical: 0),
           itemBuilder: (context, index) {
             return CommonListTile(
+              index: index,
               onLongPress: () {
                 if (!selected) {
                   homeBloc.add(ShowBottomMenuEvent(selected: true));
@@ -601,20 +620,19 @@ class _HomeState extends State<Home> {
     );
   }
 
-  Widget verticalTab({
-    required FilesModel data,
-    required String img,
-    required String fileType,
-    required String title,
-  }) {
+  Widget verticalTab({required FilesModel data, required GetTypeNameTitle getTypeAndTitle}) {
     return InkWell(
       onTap: () async {
-        if (fileType == "Directories") {
+        if (getTypeAndTitle.fileType == "Directories") {
           await navigatorPush(
-            DirectoriesScreen(path: '/storage/emulated/0/', showMenu: true, title: title),
+            context: context,
+            navigate: DirectoriesScreen(path: '/storage/emulated/0/', showMenu: true, title: getTypeAndTitle.title),
           );
         } else {
-          await navigatorPush(AllFile(fileType: fileType, title: title));
+          await navigatorPush(
+            context: context,
+            navigate: AllFile(fileType: getTypeAndTitle.fileType, title: getTypeAndTitle.title),
+          );
         }
         getRecentData();
       },
@@ -628,18 +646,21 @@ class _HomeState extends State<Home> {
             borderRadius: BorderRadius.circular(10),
           ),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 12.w),
-                child: Image.asset(img, width: 55.w, fit: BoxFit.cover),
+                child: Image.asset(getTypeAndTitle.image, width: 55.w, fit: BoxFit.cover),
               ),
               SizedBox(height: 2.h),
-              Text(
-                data.title,
-                style: Theme.of(currentContext).textTheme.displaySmall,
+              Expanded(
+                child: Text(
+                  key: Key(getTypeAndTitle.title.toString()),
+                  data.title,
+                  style: Theme.of(context).textTheme.displaySmall,
+                ),
               ),
-              const Spacer(),
+              // const Spacer(),
               Container(
                 margin: EdgeInsets.fromLTRB(0, 0, 3.w, 3.w),
                 decoration: BoxDecoration(
@@ -667,7 +688,13 @@ class _HomeState extends State<Home> {
     required String title,
   }) {
     return InkWell(
-      onTap: () => navigatorPush(AllFile(fileType: fileType, title: title)),
+      key: Key(title.toString()),
+      onTap: () {
+        navigatorPush(
+          context: context,
+          navigate: AllFile(fileType: fileType, title: title),
+        );
+      },
       child: Container(
         decoration: BoxDecoration(
           color: ColorUtils.greyF4,
@@ -684,7 +711,7 @@ class _HomeState extends State<Home> {
               data.title,
               maxLines: 1,
               textAlign: TextAlign.center,
-              style: Theme.of(currentContext).textTheme.displaySmall,
+              style: Theme.of(context).textTheme.displaySmall,
             ),
             Align(
               alignment: Alignment.bottomRight,
@@ -707,13 +734,11 @@ class _HomeState extends State<Home> {
     );
   }
 
-  Widget recentTab({required String title, required int count}) {
+  Widget tab({required String title, required int count}) {
     return InkWell(
+      key: Key(count.toString()),
       onTap: () {
-        homeBloc.add(ShowBottomMenuEvent(selected: false));
-        BottomBar.changeBottom(context, true);
-
-        if (recentIndex == count) {
+        if (tabIndex == count) {
           homeBloc.add(RecentTabEvent(index: 0));
         } else {
           homeBloc.add(RecentTabEvent(index: count));
@@ -725,16 +750,16 @@ class _HomeState extends State<Home> {
         child: Container(
           width: 95.w,
           decoration: BoxDecoration(
-            boxShadow: recentIndex == count ? commonShadow() : [],
-            gradient: recentIndex == count ? commonGradient() : null,
+            boxShadow: tabIndex == count ? commonShadow() : [],
+            gradient: tabIndex == count ? commonGradient() : null,
             borderRadius: BorderRadius.circular(10.w),
           ),
           padding: EdgeInsets.symmetric(vertical: 8.w),
           child: Center(
             child: Text(
               title,
-              style: Theme.of(currentContext).textTheme.bodyMedium?.copyWith(
-                    color: recentIndex == count ? ColorUtils.white : null,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: tabIndex == count ? ColorUtils.white : null,
                   ),
             ),
           ),

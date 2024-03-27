@@ -1,8 +1,8 @@
-abstract class OnboardingState {}
+abstract class OnboardingState1 {}
 
-class OnboardingInitial extends OnboardingState {}
+class OnboardingInitial extends OnboardingState1 {}
 
-class GetOnboardingIndexState extends OnboardingState {
+class GetOnboardingIndexState extends OnboardingState1 {
   final int? pageIndex;
 
   GetOnboardingIndexState({this.pageIndex});

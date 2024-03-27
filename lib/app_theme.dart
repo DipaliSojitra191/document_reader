@@ -9,7 +9,7 @@ class AppTheme {
 
   static ThemeData lightTheme() => ThemeData(
         useMaterial3: false,
-        // scaffoldBackgroundColor: ColorUtils.white,
+        scaffoldBackgroundColor: ColorUtils.white,
         // pageTransitionsTheme: const PageTransitionsTheme(
         //   builders: {
         //     TargetPlatform.android: CupertinoPageTransitionsBuilder(),

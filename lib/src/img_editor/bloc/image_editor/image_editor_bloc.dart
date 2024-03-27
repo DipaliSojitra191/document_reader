@@ -9,7 +9,6 @@ import 'package:document_reader/src/img_editor/image_editor.dart';
 import 'package:document_reader/utils/common_functions.dart';
 import 'package:document_reader/utils/custom_snackbar.dart';
 import 'package:document_reader/utils/logs.dart';
-import 'package:document_reader/utils/navigation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:image/image.dart' as imagelib;
@@ -58,13 +57,15 @@ class ImageEditorBloc extends Bloc<ImageEditorEvent, ImageEditorState> {
           emit(SaveImageState(status: true));
 
           showSnackBar(
-            message: AppLocalizations.of(currentContext)!.downloadSuccess,
+            context: event.context,
+            message: AppLocalizations.of(event.context)!.downloadSuccess,
           );
         } catch (e) {
           logs(message: "Save Image IOS E:-----> $e");
           emit(SaveImageState(status: false));
           showSnackBar(
-            message: AppLocalizations.of(currentContext)!.somethingWentWrong,
+            context: event.context,
+            message: AppLocalizations.of(event.context)!.somethingWentWrong,
             errorSnackBar: true,
           );
         }
@@ -84,13 +85,15 @@ class ImageEditorBloc extends Bloc<ImageEditorEvent, ImageEditorState> {
         emit(SaveImageState(status: true));
 
         showSnackBar(
-          message: AppLocalizations.of(currentContext)!.downloadSuccess,
+          context: event.context,
+          message: AppLocalizations.of(event.context)!.downloadSuccess,
         );
       } catch (e) {
         logs(message: "Save Image E:-----> $e");
         emit(SaveImageState(status: false));
         showSnackBar(
-          message: AppLocalizations.of(currentContext)!.somethingWentWrong,
+          context: event.context,
+          message: AppLocalizations.of(event.context)!.somethingWentWrong,
           errorSnackBar: true,
         );
       }
@@ -124,6 +127,7 @@ class ImageEditorBloc extends Bloc<ImageEditorEvent, ImageEditorState> {
   }
 
   final pdf = pw.Document();
+
   Future<Uint8List> convertImageToPdf(imageList) async {
     try {
       for (Uint8List imageData in imageList) {
