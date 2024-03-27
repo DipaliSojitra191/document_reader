@@ -52,8 +52,11 @@ jobs:
       - run: flutter pub get
         name: Get dependencies
 
+      - name: Statically analyze the Dart code for any errors.
+        run: flutter analyze .
+
       - run: Flutter Test
-        name: flutter test test/widget_test.dart
+        name: flutter test
 
       - run: flutter build apk
         name: Build APK
