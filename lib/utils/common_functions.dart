@@ -31,7 +31,9 @@ Future<bool> storagePermission({required BuildContext context}) async {
       bool s = await Permission.manageExternalStorage.status == PermissionStatus.granted;
 
       if (s1 == false || s == false) {
-        showSnackBar(message: permiMessage, context: context);
+        if (context.mounted) {
+          showSnackBar(message: permiMessage, context: context);
+        }
       }
 
       return s1 == true && s == true;
@@ -169,7 +171,6 @@ Future<void> shareFile({required List<String> path}) async {
   }
 
   try {
-    debugPrint("share file..");
     final result = await Share.shareXFiles(filePath);
     if (result.status == ShareResultStatus.success) {
       logs(message: 'Thank you for sharing the files!');
@@ -181,7 +182,7 @@ Future<void> shareFile({required List<String> path}) async {
 
 Future<Map> renameFile({required String oldFilePath, required String newFileName, required BuildContext context}) async {
   File oldFile = File(oldFilePath);
-  debugPrint("rename file..");
+
   try {
     if (oldFile.existsSync()) {
       String ext = oldFile.path.split(".").last;
@@ -203,7 +204,7 @@ Future<Map> renameFile({required String oldFilePath, required String newFileName
 
 Future<bool> deleteFile(String path) async {
   File oldFile = File(path);
-  debugPrint("delete file..");
+
   if (oldFile.existsSync()) {
     try {
       oldFile.deleteSync();
@@ -225,10 +226,14 @@ Future openFileOnTap({required FilesDataModel data, required BuildContext contex
     if (result.type.name == "done") {
       PrefsRepo().setRecentJson(data: data);
     } else {
-      fileNotSupportBottomSheet(context: context);
+      if (context.mounted) {
+        fileNotSupportBottomSheet(context: context);
+      }
     }
   } catch (e) {
-    fileNotSupportBottomSheet(context: context);
+    if (context.mounted) {
+      fileNotSupportBottomSheet(context: context);
+    }
   }
 }
 
@@ -266,9 +271,9 @@ Future addToBookmark({
 }
 
 /// internet connectivity
+bool dialogOpen = false;
+final Connectivity connectivity = Connectivity();
 Future<bool> checkInternetConnection({required BuildContext context}) async {
-  bool dialogOpen = false;
-  final Connectivity connectivity = Connectivity();
   try {
     ConnectivityResult result = await connectivity.checkConnectivity();
 
@@ -277,17 +282,23 @@ Future<bool> checkInternetConnection({required BuildContext context}) async {
     });
 
     if (result == ConnectivityResult.none) {
-      dialogOpen = true;
-      internetDialog(
-        context: context,
-        okTap: () {
-          dialogOpen = false;
-        },
-      );
+      if (dialogOpen == true) {
+        if (context.mounted) {
+          internetDialog(
+            context: context,
+            okTap: () {
+              dialogOpen = false;
+            },
+          );
+          dialogOpen = true;
+        }
+      }
     } else {
       if (dialogOpen == true) {
-        Navigator.pop(context);
-        dialogOpen = false;
+        if (context.mounted) {
+          Navigator.pop(context);
+          dialogOpen = false;
+        }
       }
     }
     ConnectivityResult result1 = await connectivity.checkConnectivity();
@@ -301,8 +312,10 @@ Future<bool> checkInternetConnection({required BuildContext context}) async {
 
 void internetDialog({required VoidCallback okTap, required BuildContext context}) {
   showDialog(
+    barrierDismissible: false,
     context: context,
     builder: (BuildContext context) {
+      print("internet dialog open");
       return AlertDialog(
         title: Text(AppLocalizations.of(context)?.noConnectionError ?? ""),
         content: Text(AppLocalizations.of(context)?.checkInternetConnectivity ?? ""),
@@ -317,5 +330,5 @@ void internetDialog({required VoidCallback okTap, required BuildContext context}
         ],
       );
     },
-  );
+  ).then((value) => print("internet dialog closed....."));
 }

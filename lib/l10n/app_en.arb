@@ -73,7 +73,6 @@
   "somethingWentWrong": "Something went wrong",
   "noConnectionError": "No Connection Error",
   "checkInternetConnectivity": "Please check your internet connectivity",
-  "permissionRequired": "Permission Required",
   "externalStoragePermissionRequired": "External storage permission is required to read documents on your devices.",
   "cancel": "Cancel",
   "allow": "Allow",

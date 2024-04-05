@@ -73,7 +73,6 @@
   "somethingWentWrong": "Quelque chose s'est mal passé",
   "noConnectionError": "Erreur de connexion",
   "checkInternetConnectivity": "Veuillez vérifier votre connectivité Internet",
-  "permissionRequired": "Permission requise",
   "externalStoragePermissionRequired": "Une autorisation de stockage externe est requise pour lire les documents sur vos appareils.",
   "cancel": "Annuler",
   "allow": "Autoriser",

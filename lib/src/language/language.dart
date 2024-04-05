@@ -56,7 +56,7 @@ class LanguageState extends State<Language> {
             child: CustomAppbar(
               key: const Key("languageAppBar"),
               title: AppLocalizations.of(context)?.language ?? '',
-              onPress: () => removeRoute(const BottomBarScreen(currentindex: 2), context: context),
+              onPress: () => removeRoute(navigate: const BottomBarScreen(currentindex: 2), context: context),
             ),
           ),
           body: ListView.builder(

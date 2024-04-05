@@ -8,6 +8,7 @@ import 'package:document_reader/utils/common_functions.dart';
 import 'package:document_reader/utils/custom_btn.dart';
 import 'package:document_reader/utils/custom_data/custom_dialog.dart';
 import 'package:document_reader/utils/custom_data/custom_widget.dart';
+import 'package:document_reader/utils/logs.dart';
 import 'package:document_reader/utils/navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -38,14 +39,13 @@ void moreBottomSheet({
   VoidCallback? moveOutOnTap,
   required FilesDataModel allFiles,
 }) {
-  debugPrint("more bottom sheet open ...");
-  BuildContext moreDialogContext = context;
   showModalBottomSheet(
-    context: moreDialogContext,
+    context: context,
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(15.w)),
     ),
     builder: (BuildContext context) {
+      logs(message: "more dialog open.....");
       return StatefulBuilder(
         builder: (BuildContext context, StateSetter setStat) {
           return Container(
@@ -100,6 +100,7 @@ void moreBottomSheet({
                           context: context,
                           onTap: () {
                             navigateBack(context: context);
+                            print('Share tap');
                             shareFile(path: [allFiles.path.path]);
                           },
                           allFiles: allFiles,
@@ -113,10 +114,11 @@ void moreBottomSheet({
                           image: IconStrings.outlineRename,
                           allFiles: allFiles,
                           onTap: () async {
-                            deleteOnTap();
+                            print("rename tapped");
 
                             String oldName = allFiles.name.split(".").first;
                             final rename = await renameDialog(context: context, name: oldName);
+                            navigateBack(context: context);
 
                             if (rename != oldName) {
                               final status = await renameFile(oldFilePath: allFiles.path.path, newFileName: rename, context: context);
@@ -140,9 +142,9 @@ void moreBottomSheet({
                                     }
                                   }
                                 }
-                                getFilesOnTap();
                               }
                             }
+                            getFilesOnTap();
                           },
                         ),
                       if (moveOutOnTap != null) SizedBox(width: 15.w),
@@ -153,7 +155,7 @@ void moreBottomSheet({
                           name: AppLocalizations.of(context)?.moveOut ?? '',
                           allFiles: allFiles,
                           onTap: () {
-                            deleteOnTap();
+                            print('Move-out tap');
                             moveOutDialog(
                               context: context,
                               moveOut: () => moveOutOnTap(),
@@ -167,10 +169,10 @@ void moreBottomSheet({
                         image: IconStrings.outlineDelete,
                         name: AppLocalizations.of(context)?.delete ?? "",
                         onTap: () {
-                          deleteOnTap();
+                          print('Delete tap');
                           deleteDialog(
                             context: context,
-                            callback: () async {
+                            deleteOnTap: () async {
                               final bool status = await deleteFile(allFiles.path.path);
                               if (status) {
                                 List<FilesDataModel> recentData = await PrefsRepo().getRecentJson();
@@ -205,9 +207,7 @@ void moreBottomSheet({
         },
       );
     },
-  ).then((value) {
-    debugPrint("more bottom sheet close ...");
-  });
+  ).then((value) => logs(message: "more dialog closed....."));
 }
 
 void fileNotSupportBottomSheet({required BuildContext context}) {

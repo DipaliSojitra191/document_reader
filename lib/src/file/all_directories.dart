@@ -398,13 +398,13 @@ class CommonListTile extends StatelessWidget {
         child: Image.asset(image, key: const Key("image")),
       ),
       title: Text(
-        key: const Key("title"),
+        key: Key("title-$index"),
         data.name,
         maxLines: 1,
         style: Theme.of(context).textTheme.displaySmall,
       ),
       subtitle: Text(
-        key: const Key("subtitle"),
+        key: Key("subtitle-$index"),
         "$date $time ${data.size}",
         maxLines: 1,
         style: Theme.of(context).textTheme.bodySmall,
@@ -439,17 +439,15 @@ class CommonListTile extends StatelessWidget {
                 InkWell(
                   key: Key("more-$index"),
                   child: Icon(Icons.more_vert, color: ColorUtils.black),
-                  onTap: () {
-                    moreBottomSheet(
-                      showRename: showRename,
-                      moveOutOnTap: moveOutOnTap,
-                      showShare: true,
-                      context: context,
-                      allFiles: data,
-                      getFilesOnTap: () => getFilesOnTap(),
-                      deleteOnTap: () => navigateBack(context: context),
-                    );
-                  },
+                  onTap: () => moreBottomSheet(
+                    showRename: showRename,
+                    moveOutOnTap: moveOutOnTap,
+                    showShare: true,
+                    context: context,
+                    allFiles: data,
+                    getFilesOnTap: () => getFilesOnTap(),
+                    deleteOnTap: () => navigateBack(context: context),
+                  ),
                 ),
               ],
             ),

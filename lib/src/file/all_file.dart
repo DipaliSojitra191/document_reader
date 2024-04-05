@@ -73,9 +73,25 @@ class AllFileState extends State<AllFile> {
 
   bool showRename = true;
 
+  manageBack(BuildContext context) {
+    bool isEmpty = allFiles.where((element) => element.selected).isEmpty;
+    if (recentSelected) {
+      if (isEmpty) {
+        allFileBloc.add(SelectedBackTapEvent(selected: false));
+      } else {
+        for (int i = 0; i < allFiles.length; i++) {
+          allFileBloc.add(
+            FileSelectEvent(isBookmark: false, index: i, selected: false),
+          );
+        }
+      }
+    } else {
+      Navigator.pop(context);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    debugPrint("${widget.title} screen.....");
     list1 = [
       AppLocalizations.of(context)?.name ?? "",
       AppLocalizations.of(context)?.date ?? "",
@@ -122,11 +138,7 @@ class AllFileState extends State<AllFile> {
             preferredSize: const Size.fromHeight(kToolbarHeight + 1),
             child: CustomAppbar(
               onPress: () {
-                if (recentSelected == true) {
-                  allFileBloc.add(SelectedBackTapEvent(selected: false));
-                } else {
-                  Navigator.pop(context);
-                }
+                manageBack(context);
               },
               title: !recentSelected ? widget.title : AppLocalizations.of(context)?.selected ?? "",
               action: [
@@ -178,138 +190,144 @@ class AllFileState extends State<AllFile> {
                 noDataFound()
               else
                 Expanded(
-                  child: ListView.builder(
-                    itemCount: allFiles.length,
-                    shrinkWrap: true,
-                    itemBuilder: (context, index) {
-                      return CommonListTile(
-                        index: index,
-                        onLongPress: () {
-                          if (!recentSelected) {
-                            allFileBloc.add(
-                              FileSelectedUnSelectedEvent(allFiles: allFiles, selected: true),
+                  child: Column(
+                    children: [
+                      Expanded(
+                        child: ListView.builder(
+                          itemCount: allFiles.length,
+                          shrinkWrap: true,
+                          itemBuilder: (context, index) {
+                            return CommonListTile(
+                              index: index,
+                              onLongPress: () {
+                                if (!recentSelected) {
+                                  allFileBloc.add(
+                                    FileSelectedUnSelectedEvent(allFiles: allFiles, selected: true),
+                                  );
+                                }
+                              },
+                              showRename: showRename,
+                              data: allFiles[index],
+                              selectAll: recentSelected,
+                              getFilesOnTap: getFiles,
+                              bookmarkOnTap: () {
+                                allFileBloc.add(
+                                  FileSelectEvent(
+                                    isBookmark: true,
+                                    index: index,
+                                    selected: !allFiles[index].bookmark,
+                                  ),
+                                );
+                              },
+                              selectOptionOnTap: () {
+                                allFileBloc.add(
+                                  FileSelectEvent(
+                                    isBookmark: false,
+                                    index: index,
+                                    selected: !allFiles[index].selected,
+                                  ),
+                                );
+                              },
                             );
-                          }
-                        },
-                        showRename: showRename,
-                        data: allFiles[index],
-                        selectAll: recentSelected,
-                        getFilesOnTap: getFiles,
-                        bookmarkOnTap: () {
-                          allFileBloc.add(
-                            FileSelectEvent(
-                              isBookmark: true,
-                              index: index,
-                              selected: !allFiles[index].bookmark,
+                          },
+                        ),
+                      ),
+                      if (recentSelected)
+                        Builder(builder: (context) {
+                          bool isEmpty = allFiles.where((element) => element.selected).isEmpty;
+                          Color color = isEmpty ? ColorUtils.greyAA : ColorUtils.primary;
+                          return SizedBox(
+                            key: const Key("share-delete"),
+                            height: 70.h,
+                            child: Column(
+                              children: [
+                                SizedBox(height: 2.h),
+                                Divider(color: ColorUtils.black, height: 2),
+                                Expanded(
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                    children: [
+                                      InkWell(
+                                        key: const Key("share"),
+                                        onTap: () {
+                                          if (!isEmpty) {
+                                            List<String> filePath = [];
+                                            for (var element in allFiles) {
+                                              if (element.selected) {
+                                                filePath.add(element.path.path);
+                                              }
+                                            }
+                                            shareFile(path: filePath);
+                                          }
+                                        },
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            SizedBox(
+                                              child: Image.asset(
+                                                IconStrings.share1,
+                                                fit: BoxFit.cover,
+                                                height: 18.h,
+                                                color: color,
+                                              ),
+                                            ),
+                                            SizedBox(height: 4.h),
+                                            Text(
+                                              AppLocalizations.of(context)?.share ?? '',
+                                              style: Theme.of(context).textTheme.displaySmall?.copyWith(color: color),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      InkWell(
+                                        key: const Key("delete-all"),
+                                        onTap: () {
+                                          if (!isEmpty) {
+                                            deleteDialog(
+                                              context: context,
+                                              deleteOnTap: () {
+                                                for (var element in allFiles) {
+                                                  if (element.selected) {
+                                                    deleteFile(element.path.path);
+                                                  }
+                                                }
+                                                allFileBloc.add(SelectedBackTapEvent(selected: false));
+                                                getFiles();
+                                              },
+                                            );
+                                          }
+                                        },
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Image.asset(
+                                              IconStrings.delete1,
+                                              fit: BoxFit.cover,
+                                              height: 18.h,
+                                              color: color,
+                                            ),
+                                            SizedBox(height: 6.h),
+                                            Text(
+                                              AppLocalizations.of(context)?.delete ?? '',
+                                              style: Theme.of(context).textTheme.displaySmall?.copyWith(color: color),
+                                            )
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Divider(color: ColorUtils.black, height: 2),
+                                SizedBox(height: 2.h),
+                              ],
                             ),
                           );
-                        },
-                        selectOptionOnTap: () {
-                          allFileBloc.add(
-                            FileSelectEvent(
-                              isBookmark: false,
-                              index: index,
-                              selected: !allFiles[index].selected,
-                            ),
-                          );
-                        },
-                      );
-                    },
+                        }),
+                    ],
                   ),
                 ),
-              if (recentSelected)
-                Builder(builder: (context) {
-                  bool isEmpty = allFiles.where((element) => element.selected).isEmpty;
-                  Color color = isEmpty ? ColorUtils.greyAA : ColorUtils.primary;
-                  return SizedBox(
-                    key: const Key("share-delete"),
-                    height: 70.h,
-                    child: Column(
-                      children: [
-                        SizedBox(height: 2.h),
-                        Divider(color: ColorUtils.black, height: 2),
-                        Expanded(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
-                            children: [
-                              InkWell(
-                                key: const Key("share"),
-                                onTap: isEmpty
-                                    ? null
-                                    : () {
-                                        List<String> filePath = [];
-                                        for (var element in allFiles) {
-                                          if (element.selected) {
-                                            filePath.add(element.path.path);
-                                          }
-                                        }
-                                        shareFile(path: filePath);
-                                      },
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    SizedBox(
-                                      child: Image.asset(
-                                        IconStrings.share1,
-                                        fit: BoxFit.cover,
-                                        height: 18.h,
-                                        color: color,
-                                      ),
-                                    ),
-                                    SizedBox(height: 4.h),
-                                    Text(
-                                      AppLocalizations.of(context)?.share ?? '',
-                                      style: Theme.of(context).textTheme.displaySmall!.copyWith(color: color),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              InkWell(
-                                key: const Key("delete-all"),
-                                onTap: isEmpty
-                                    ? null
-                                    : () {
-                                        deleteDialog(
-                                            context: context,
-                                            callback: () {
-                                              for (var element in allFiles) {
-                                                if (element.selected) {
-                                                  deleteFile(element.path.path);
-                                                }
-                                              }
-                                              recentSelected = false;
-
-                                              getFiles();
-                                            });
-                                      },
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Image.asset(
-                                      IconStrings.delete1,
-                                      fit: BoxFit.cover,
-                                      height: 18.h,
-                                      color: color,
-                                    ),
-                                    SizedBox(height: 6.h),
-                                    Text(
-                                      AppLocalizations.of(context)?.delete ?? '',
-                                      style: Theme.of(context).textTheme.displaySmall!.copyWith(color: color),
-                                    )
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Divider(color: ColorUtils.black, height: 2),
-                        SizedBox(height: 2.h),
-                      ],
-                    ),
-                  );
-                }),
             ],
           ),
         );
@@ -319,8 +337,12 @@ class AllFileState extends State<AllFile> {
 
   Widget noDataFound() {
     return Expanded(
-      key: const Key('no-files-found'),
-      child: Center(child: Text(AppLocalizations.of(context)?.noFilesFound ?? '')),
+      child: Center(
+        child: Text(
+          AppLocalizations.of(context)?.noFilesFound ?? '',
+          key: const Key('no-files-found'),
+        ),
+      ),
     );
   }
 
@@ -387,7 +409,7 @@ class AllFileState extends State<AllFile> {
                                             ),
                                             Text(
                                               list1[index],
-                                              style: Theme.of(context).textTheme.displaySmall!.copyWith(
+                                              style: Theme.of(context).textTheme.displaySmall?.copyWith(
                                                     color: ColorUtils.primary,
                                                   ),
                                             ),
@@ -470,7 +492,7 @@ class AllFileState extends State<AllFile> {
                                                 ),
                                                 Text(
                                                   list2[index],
-                                                  style: Theme.of(context).textTheme.displaySmall!.copyWith(
+                                                  style: Theme.of(context).textTheme.displaySmall?.copyWith(
                                                         color: ColorUtils.primary,
                                                       ),
                                                 ),
@@ -516,7 +538,6 @@ class AllFileState extends State<AllFile> {
                             padding: EdgeInsets.all(5.w),
                             child: Center(
                               child: CustomBtn(
-                                key: const Key('ok'),
                                 onTap: () => allFileBloc.add(FilterEvent(selected1: filter1, selected2: filter2)),
                                 title: AppLocalizations.of(context)?.ok ?? '',
                                 radius: 10.w,

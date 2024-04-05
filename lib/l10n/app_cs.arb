@@ -73,7 +73,6 @@
   "somethingWentWrong": "Něco se pokazilo",
   "noConnectionError": "Chyba připojení",
   "checkInternetConnectivity": "Prosím, zkontrolujte své internetové připojení",
-  "permissionRequired": "Vyžaduje se povolení",
   "externalStoragePermissionRequired": "Je vyžadováno povolení k externímu úložišti pro čtení dokumentů na vašich zařízeních.",
   "cancel": "Zrušit",
   "allow": "Povolit",

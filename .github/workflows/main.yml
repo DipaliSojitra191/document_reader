@@ -49,14 +49,14 @@ jobs:
         name: Install Flutter
         with:
           channel: 'beta'
-      - run: flutter pub get
-        name: Get dependencies
+      - name: Get Dependencies
+        run: flutter pub get
 
       - name: Flutter Test
         run: flutter test --coverage
 
-      - run: flutter build apk
-        name: Build APK
+      - name: Build APK
+        run: flutter build apk
 
       - uses: actions/upload-artifact@v2
         name: Upload APK
@@ -72,8 +72,8 @@ jobs:
           echo "Ref ${{ github.ref }}"
           echo "RUN ${{ github.run_number }}"
 
-      - uses: actions/create-release@v1
-        name: Create a Release in GitHub
+      - name: Create a Release in GitHub
+        uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           tag_name: ${{ needs.version.outputs.output1 }}

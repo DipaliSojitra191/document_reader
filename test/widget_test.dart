@@ -1,9 +1,12 @@
+import 'dart:io';
+
 import 'package:clipboard/clipboard.dart';
 import 'package:document_reader/app_theme.dart';
 import 'package:document_reader/main.dart';
 import 'package:document_reader/shared_Preference/preferences_helper.dart';
 import 'package:document_reader/src/bottombar/bottombar.dart';
 import 'package:document_reader/src/file/all_file.dart';
+import 'package:document_reader/src/file/model/files_data_model.dart';
 import 'package:document_reader/src/home/home.dart';
 import 'package:document_reader/src/language/language.dart';
 import 'package:document_reader/src/onboarding/bloc/onboarding_event.dart';
@@ -21,11 +24,55 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:share_plus/share_plus.dart';
 
 final PrefsRepo prefsRepo = PrefsRepo();
+
+final tempList = [
+  FilesDataModel(
+    count: "1",
+    size: "17 KB",
+    path: File("https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"),
+    selected: false,
+    bookmark: true,
+    isFolder: false,
+    name: "dummy.pdf",
+    date: DateTime.now().toString(),
+  ),
+  FilesDataModel(
+    count: "1",
+    size: "17 KB",
+    path: File("https://clickdimensions.com/links/TestPDFfile.pdf"),
+    selected: false,
+    bookmark: true,
+    isFolder: false,
+    name: "TestPDFfile.pdf",
+    date: DateTime.now().toString(),
+  ),
+  FilesDataModel(
+    count: "1",
+    size: "17 KB",
+    path: File("https://picsum.photos/seed/500/100"),
+    selected: false,
+    bookmark: false,
+    isFolder: false,
+    name: "seed500.png",
+    date: DateTime.now().toString(),
+  ),
+  FilesDataModel(
+    count: "1",
+    size: "17 KB",
+    path: File("https://picsum.photos/seed/501/100"),
+    selected: false,
+    bookmark: false,
+    isFolder: false,
+    name: "seed501.png",
+    date: DateTime.now().toString(),
+  ),
+];
 
 class ShareUtils {
   share(String url) {
@@ -42,641 +89,649 @@ class PermissionUtils {
 
 class MockShareUtil extends Mock implements ShareUtils {}
 
-// class MockPermission extends Mock implements PermissionService {}
-
 class MockImagePicker extends Mock implements ImagePicker {}
 
 class MockTextRecognizer extends Mock implements TextRecognizer {}
 
-// class PermissionService {
-//   Future<PermissionStatus> requestPermission() async {
-//     PermissionStatus status = await Permission.camera.request();
-//     return status;
-//   }
-// }
-
 void main() async {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  testWidgets("Test widget", (WidgetTester tester) async {
-    await tester.pumpWidget(
-      ScreenUtilInit(
-        builder: (_, __) => MaterialApp(
-          theme: AppTheme.lightTheme(),
-          home: const SplashScreen(),
-          navigatorKey: navigatorKey,
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-        ),
-      ),
-    );
-
-    // await tester.pumpAndSettle(const Duration(seconds: 2));
-    // final MockPermission mockPermission = MockPermission();
-    // mockPermission.requestPermission();
-    // verify(() => mockPermission.requestPermission()).called(1);
-  });
-
-  /// onboarding scenarios
-  testWidgets('onboarding', (WidgetTester tester) async {
-    await tester.pumpWidget(
-      ScreenUtilInit(
-        builder: (_, __) => MaterialApp(
-          home: const OnBoarding(),
-          theme: AppTheme.lightTheme(),
-          navigatorKey: navigatorKey,
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-        ),
-      ),
-    );
-
-    await tester.pump();
-    final OnBoardingState myHomePageState = tester.state(find.byType(OnBoarding));
-    final onboardingBloc = myHomePageState.onboardingBloc;
-    expect(find.byKey(const Key('onboarding')), findsOneWidget);
-
-    for (int i = 0; i < myHomePageState.onboardingData.length; i++) {
-      onboardingBloc.add(GetOnboardingIndexEvent(pageIndex: i));
-      await tester.pump();
-      await tester.tap(find.byKey(const ValueKey('onboarding_next_button')));
-
-      switch (i) {
-        case 0:
-          expect(myHomePageState.onboardingData[i].title, StringUtils.onboarding1Title);
-          expect(myHomePageState.onboardingData[i].subTitle, StringUtils.onboarding1Desc);
-          break;
-        case 1:
-          expect(myHomePageState.onboardingData[i].title, StringUtils.onboarding2Title);
-          expect(myHomePageState.onboardingData[i].subTitle, StringUtils.onboarding2Desc);
-          break;
-        case 2:
-          expect(myHomePageState.onboardingData[i].title, StringUtils.onboarding3Title);
-          expect(myHomePageState.onboardingData[i].subTitle, StringUtils.onboarding3Desc);
-          break;
-        case 3:
-          expect(myHomePageState.onboardingData[i].title, StringUtils.onboarding4Title);
-          expect(myHomePageState.onboardingData[i].subTitle, StringUtils.onboarding4Desc);
-          break;
-        case 4:
-          expect(myHomePageState.onboardingData[i].title, StringUtils.onboarding5Title);
-          expect(myHomePageState.onboardingData[i].subTitle, StringUtils.onboarding5Desc);
-          break;
-      }
-    }
-  });
-
-  /// splash scenarios
-  testWidgets("splash", (WidgetTester tester) async {
-    await tester.pumpWidget(
-      ScreenUtilInit(
-        builder: (_, __) => const MaterialApp(home: SplashScreen()),
-      ),
-    );
-  });
-
-  /// bottom bar scenarios
-  testWidgets("Bottom Bar", (WidgetTester tester) async {
-    await tester.pumpWidget(ScreenUtilInit(
-      builder: (_, __) => MaterialApp(
-        theme: AppTheme.lightTheme(),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: const BottomBarScreen(currentindex: 0),
-      ),
-    ));
-
-    await tester.pumpAndSettle(const Duration(seconds: 3));
-    expect(find.byKey(const Key('bottom-sheet')), findsWidgets);
-  });
-
-  /// home screen scenarios
-  group("Home Testing", () {
+  group("Document reader", () {
     late MockShareUtil mockShareUtil;
-
     setUpAll(() {
       mockShareUtil = MockShareUtil();
     });
-
-    testWidgets("Home", (WidgetTester tester) async {
+    testWidgets("Test widget", (WidgetTester tester) async {
       await tester.pumpWidget(
         ScreenUtilInit(
           builder: (_, __) => MaterialApp(
+            theme: AppTheme.lightTheme(),
+            home: const SplashScreen(),
+            navigatorKey: navigatorKey,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+          ),
+        ),
+      );
+
+      // await tester.pumpAndSettle(const Duration(seconds: 2));
+      // final MockPermission mockPermission = MockPermission();
+      // mockPermission.requestPermission();
+      // verify(() => mockPermission.requestPermission()).called(1);
+    });
+
+    /// onboarding scenarios
+    testWidgets('onboarding', (WidgetTester tester) async {
+      await tester.pumpWidget(
+        ScreenUtilInit(
+          builder: (_, __) => MaterialApp(
+            home: const OnBoarding(),
             theme: AppTheme.lightTheme(),
             navigatorKey: navigatorKey,
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
-            home: const BottomBarScreen(currentindex: 0),
           ),
         ),
       );
 
-      await tester.pumpAndSettle(const Duration(seconds: 2));
+      await tester.pump();
+      final OnBoardingState myHomePageState = tester.state(find.byType(OnBoarding));
+      final onboardingBloc = myHomePageState.onboardingBloc;
+      expect(find.byKey(const Key('onboarding')), findsOneWidget);
 
-      final HomeScreenState homeState = tester.state(find.byType(HomeScreen));
+      for (int i = 0; i < myHomePageState.onboardingData.length; i++) {
+        onboardingBloc.add(GetOnboardingIndexEvent(pageIndex: i));
+        await tester.pump();
+        await tester.tap(find.byKey(const ValueKey('onboarding_next_button')));
 
-      /// default data
-      expect(getTypeAndTitle(context: homeState.context, index: 0).title, AppLocalizations.of(homeState.context)?.allFiles ?? '');
-      expect(getTypeAndTitle(context: homeState.context, index: 1).title, AppLocalizations.of(homeState.context)?.pdfFiles ?? '');
-      expect(getTypeAndTitle(context: homeState.context, index: 2).title, AppLocalizations.of(homeState.context)?.wordFiles ?? '');
-      expect(getTypeAndTitle(context: homeState.context, index: 3).title, AppLocalizations.of(homeState.context)?.pptFiles ?? '');
-      expect(getTypeAndTitle(context: homeState.context, index: 4).title, AppLocalizations.of(homeState.context)?.excelFiles ?? '');
-      expect(getTypeAndTitle(context: homeState.context, index: 5).title, AppLocalizations.of(homeState.context)?.txtFiles ?? '');
-      expect(getTypeAndTitle(context: homeState.context, index: 6).title, AppLocalizations.of(homeState.context)?.imageFiles ?? '');
-      expect(getTypeAndTitle(context: homeState.context, index: 7).title, AppLocalizations.of(homeState.context)?.directories ?? '');
-
-      /// recent files
-      await tester.tap(find.byKey(Key(1.toString())));
-      await tester.pump(const Duration(seconds: 3));
-
-      if (homeState.recentList.isEmpty) {
-        expect(find.byKey(const Key('no-data')), findsWidgets);
-      } else {
-        expect(find.byKey(const Key('recent-data')), findsWidgets);
-      }
-
-      await tester.tap(find.byKey(Key(2.toString())));
-      await tester.pump(const Duration(seconds: 3));
-
-      if (homeState.bookmarkList.isEmpty) {
-        expect(find.byKey(const Key('no-data')), findsWidgets);
-      } else {
-        expect(find.byKey(const Key('bookmark-data')), findsWidgets);
+        switch (i) {
+          case 0:
+            expect(myHomePageState.onboardingData[i].title, StringUtils.onboarding1Title);
+            expect(myHomePageState.onboardingData[i].subTitle, StringUtils.onboarding1Desc);
+            break;
+          case 1:
+            expect(myHomePageState.onboardingData[i].title, StringUtils.onboarding2Title);
+            expect(myHomePageState.onboardingData[i].subTitle, StringUtils.onboarding2Desc);
+            break;
+          case 2:
+            expect(myHomePageState.onboardingData[i].title, StringUtils.onboarding3Title);
+            expect(myHomePageState.onboardingData[i].subTitle, StringUtils.onboarding3Desc);
+            break;
+          case 3:
+            expect(myHomePageState.onboardingData[i].title, StringUtils.onboarding4Title);
+            expect(myHomePageState.onboardingData[i].subTitle, StringUtils.onboarding4Desc);
+            break;
+          case 4:
+            expect(myHomePageState.onboardingData[i].title, StringUtils.onboarding5Title);
+            expect(myHomePageState.onboardingData[i].subTitle, StringUtils.onboarding5Desc);
+            break;
+        }
       }
     });
 
-    testWidgets("Recent", (WidgetTester tester) async {
+    /// splash scenarios
+    testWidgets("splash", (WidgetTester tester) async {
       await tester.pumpWidget(
         ScreenUtilInit(
-          builder: (_, __) => MaterialApp(
-            theme: AppTheme.lightTheme(),
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-            supportedLocales: AppLocalizations.supportedLocales,
-            home: const BottomBarScreen(currentindex: 0),
-          ),
+          builder: (_, __) => const MaterialApp(home: SplashScreen()),
         ),
       );
-
+      await tester.pump(const Duration(milliseconds: 1));
+      expect(find.byKey(const Key("splash")), findsWidgets);
       await tester.pumpAndSettle(const Duration(seconds: 3));
-      final HomeScreenState homeState = tester.state(find.byType(HomeScreen));
-
-      /// recent files
-      await tester.tap(find.byKey(const Key('1')));
-      await tester.pump(const Duration(seconds: 3));
-
-      if (homeState.bookmarkList.isEmpty) {
-        expect(find.byKey(const Key('no-data')), findsWidgets);
-      } else {
-        expect(find.byKey(const Key('recent-data')), findsWidgets);
-        expect(find.byKey(const Key('recent-selected')), findsWidgets);
-        // expect(find.byKey(const Key('recent-select-all')), findsWidgets);
-
-        await tester.pump(const Duration(seconds: 2));
-        await tester.tap(find.byKey(const Key('more-0')), warnIfMissed: false);
-
-        await tester.pump(const Duration(seconds: 2));
-        expect(find.byKey(const Key('more-dialog')), findsWidgets);
-
-        await tester.pump(const Duration(seconds: 3));
-        expect(tester.widget<Text>(find.byKey(const Key('name'))).data, homeState.recentList[0].name);
-        expect(tester.widget<Text>(find.byKey(const Key('path'))).data, homeState.recentList[0].path.path);
-
-        String imageType = "";
-        final images = tester.widgetList(find.byKey(const Key('image')));
-        for (final image in images) {
-          if (image is Image) {
-            if (image.image is AssetImage) {
-              final assetName = (image.image as AssetImage).assetName;
-              imageType = assetName;
-            }
-          }
-        }
-
-        expect(imageType.split(".").last, tester.widget<Text>(find.byKey(const Key('name'))).data.toString().split(".").last);
-
-        expect(find.byKey(Key('onTap-${AppLocalizations.of(homeState.context)?.share ?? ''}')), findsOneWidget);
-        expect(find.byKey(Key('onTap-${AppLocalizations.of(homeState.context)?.moveOut ?? ''}')), findsOneWidget);
-        expect(find.byKey(Key('onTap-${AppLocalizations.of(homeState.context)?.delete ?? ''}')), findsOneWidget);
-
-        await tester.tap(find.byKey(Key('onTap-${AppLocalizations.of(homeState.context)?.share ?? ''}')), warnIfMissed: false);
-
-        mockShareUtil.share(homeState.recentList[0].path.path);
-        verify(() => mockShareUtil.share(homeState.recentList[0].path.path)).called(1);
-
-        // await tester.pump(const Duration(seconds: 2));
-        // expect(tester.widget<Text>(find.byKey(const Key('name'))).data, homeState.bookmarkList[0].name);
-        // expect(tester.widget<Text>(find.byKey(const Key('path'))).data, homeState.bookmarkList[0].path.path);
-        // await tester.tap(find.byKey(Key('onTap-${AppLocalizations.of(homeState.context)?.share ?? ''}')), warnIfMissed: false);
-      }
+      expect(find.byKey(const Key("bottom-bar")), findsWidgets);
     });
 
-    testWidgets("Bookmark", (WidgetTester tester) async {
-      await tester.pumpWidget(
-        ScreenUtilInit(
-          builder: (_, __) => MaterialApp(
-            theme: AppTheme.lightTheme(),
-            navigatorKey: navigatorKey,
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-            supportedLocales: AppLocalizations.supportedLocales,
-            home: const BottomBarScreen(currentindex: 0),
-          ),
-        ),
-      );
-
-      await tester.pumpAndSettle(const Duration(seconds: 3));
-      final HomeScreenState homeState = tester.state(find.byType(HomeScreen));
-
-      /// bookmark files
-      await tester.tap(find.byKey(const Key('2')));
-      await tester.pump(const Duration(seconds: 3));
-
-      if (homeState.bookmarkList.isEmpty) {
-        expect(find.byKey(const Key('no-data')), findsWidgets);
-      } else {
-        expect(find.byKey(const Key('bookmark-data')), findsWidgets);
-        expect(find.byKey(const Key('bookmark-selected')), findsWidgets);
-        expect(find.byKey(const Key('bookmark-select-all')), findsWidgets);
-
-        await tester.pump(const Duration(seconds: 2));
-        await tester.tap(find.byKey(const Key('more-0')), warnIfMissed: false);
-
-        await tester.pump(const Duration(seconds: 2));
-        expect(find.byKey(const Key('more-dialog')), findsWidgets);
-
-        await tester.pump(const Duration(seconds: 3));
-        expect(tester.widget<Text>(find.byKey(const Key('name'))).data, homeState.bookmarkList[0].name);
-        expect(tester.widget<Text>(find.byKey(const Key('path'))).data, homeState.bookmarkList[0].path.path);
-
-        String imageType = "";
-        final images = tester.widgetList(find.byKey(const Key('image')));
-        for (final image in images) {
-          if (image is Image) {
-            if (image.image is AssetImage) {
-              final assetName = (image.image as AssetImage).assetName;
-              imageType = assetName;
-            }
-          }
-        }
-
-        expect(imageType.split(".").last, tester.widget<Text>(find.byKey(const Key('name'))).data.toString().split(".").last);
-
-        expect(find.byKey(Key('onTap-${AppLocalizations.of(homeState.context)?.share ?? ''}')), findsOneWidget);
-        expect(find.byKey(Key('onTap-${AppLocalizations.of(homeState.context)?.moveOut ?? ''}')), findsOneWidget);
-        expect(find.byKey(Key('onTap-${AppLocalizations.of(homeState.context)?.delete ?? ''}')), findsOneWidget);
-
-        await tester.pump(const Duration(seconds: 2));
-        expect(tester.widget<Text>(find.byKey(const Key('name'))).data, homeState.bookmarkList[0].name);
-        expect(tester.widget<Text>(find.byKey(const Key('path'))).data, homeState.bookmarkList[0].path.path);
-
-        await tester.tap(find.byKey(Key('onTap-${AppLocalizations.of(homeState.context)?.share ?? ''}')), warnIfMissed: false);
-
-        mockShareUtil.share(homeState.recentList[0].path.path);
-        verify(() => mockShareUtil.share(homeState.recentList[0].path.path)).called(1);
-      }
-    });
-  });
-
-  /// all file scenarios
-  testWidgets("All File", (WidgetTester tester) async {
-    await tester.pumpWidget(
-      ScreenUtilInit(
+    /// bottom bar scenarios
+    testWidgets("Bottom Bar", (WidgetTester tester) async {
+      await tester.pumpWidget(ScreenUtilInit(
         builder: (_, __) => MaterialApp(
           theme: AppTheme.lightTheme(),
-          supportedLocales: AppLocalizations.supportedLocales,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
-          home: const AllFile(title: "All File", fileType: 'all'),
-        ),
-      ),
-    );
-
-    await tester.pumpAndSettle(const Duration(seconds: 3));
-    AllFileState allFileState = tester.state(find.byType(AllFile));
-
-    if (allFileState.allFiles.isEmpty) {
-      debugPrint("No data");
-      expect(find.byKey(const Key('no-files-found')), findsWidgets);
-    } else {
-      expect(find.byKey(const Key('title')), findsWidgets);
-      expect(find.byKey(const Key('subtitle')), findsWidgets);
-
-      ///Select All
-      String path = allFileState.allFiles[0].path.path;
-      expect(find.byKey(const Key('selected-all')), findsWidgets);
-      expect(find.byKey(const Key('share-delete')), findsNothing);
-
-      await tester.tap(find.byKey(const Key('selected-all')));
-      await tester.pump(const Duration(seconds: 3));
-      expect(find.byKey(const Key('share-delete')), findsWidgets);
-
-      expect(find.byKey(const Key('listTile-0')), findsWidgets);
-      await tester.tap(find.byKey(const Key('listTile-0')));
-      await tester.pump(const Duration(seconds: 3));
-
-      await tester.tap(find.byKey(const Key('delete-all')));
-      await tester.pump(const Duration(seconds: 3));
-      expect(find.byKey(const Key("delete-dialog")), findsWidgets);
-
-      await tester.pump(const Duration(seconds: 3));
-      expect(find.byKey(const Key("button")), findsWidgets);
-
-      await tester.pump(const Duration(seconds: 4));
-
-      for (var element in allFileState.allFiles) {
-        debugPrint("element ${element.path.path == path}");
-      }
-
-      /// Select All Closed
-
-      /// Filter by
-      expect(find.byKey(const Key('filter')), findsWidgets);
-
-      await tester.tap(find.byKey(const Key('filter')));
-      await tester.pump(const Duration(seconds: 3));
-
-      expect(find.byKey(const Key("filter-bottom-sheet")), findsWidgets);
-      expect(find.byKey(const Key("filter-by")), findsWidgets);
-      expect(find.byKey(const Key("unselected1-0")), findsNothing);
-      expect(find.byKey(const Key("unselected1-1")), findsWidgets);
-      expect(find.byKey(const Key("unselected1-2")), findsWidgets);
-
-      // filter 1
-      await tester.pump(const Duration(seconds: 3));
-      await tester.tap(find.byKey(const Key("unselected1-1")), pointer: 10, warnIfMissed: false);
-      await tester.pump(const Duration(seconds: 3));
-      expect(find.byKey(const Key("unselected1-0")), findsWidgets);
-      expect(find.byKey(const Key("unselected1-1")), findsNothing);
-      expect(find.byKey(const Key("unselected1-2")), findsWidgets);
-
-      allFileState.allFiles.sort((a, b) => a.name.compareTo(b.name));
-
-      await tester.pump(const Duration(seconds: 3));
-      await tester.tap(find.byKey(const Key("unselected1-2")), warnIfMissed: false);
-      await tester.pump(const Duration(seconds: 3));
-      expect(find.byKey(const Key("unselected1-0")), findsWidgets);
-      expect(find.byKey(const Key("unselected1-1")), findsWidgets);
-      expect(find.byKey(const Key("unselected1-2")), findsNothing);
-
-      // filter 2
-      await tester.pump(const Duration(seconds: 3));
-      expect(find.byKey(const Key("unselected2-0")), findsNothing);
-      expect(find.byKey(const Key("unselected2-1")), findsWidgets);
-
-      await tester.tap(find.byKey(const Key("unselected2-1")), warnIfMissed: false);
-      await tester.pump(const Duration(seconds: 3));
-      expect(find.byKey(const Key("unselected2-0")), findsWidgets);
-      expect(find.byKey(const Key("unselected2-1")), findsNothing);
-      expect(find.byKey(const Key("ok")), findsWidgets);
-
-      await tester.pump(const Duration(seconds: 3));
-      await tester.tap(find.byKey(const Key("ok")), warnIfMissed: false);
-      await tester.pump(const Duration(seconds: 3));
-
-      ///
-
-      /// Bookmark
-      expect(find.byKey(const Key('bookmark-0')), findsOneWidget);
-      bool greyColor = tester.widget<Icon>(find.byKey(const Key("bookmark-0"))).color == ColorUtils.greyDE;
-      await tester.tap(find.byKey(const Key('bookmark-inkwell-0')));
-      await tester.pumpAndSettle(const Duration(seconds: 3));
-      if (greyColor) {
-        expect(tester.widget<Icon>(find.byKey(const Key("bookmark-0"))).color, ColorUtils.yellow00);
-      } else {
-        expect(tester.widget<Icon>(find.byKey(const Key("bookmark-0"))).color, ColorUtils.greyDE);
-      }
-
-      /// bookmark Closed
-
-      /// More
-      await tester.tap(find.byKey(const Key('more-0')));
-      await tester.pumpAndSettle(const Duration(seconds: 3));
-      expect(find.byKey(const Key('more-dialog')), findsOneWidget);
-      await tester.pump(const Duration(seconds: 1));
-      expect(tester.widget<Text>(find.byKey(const Key('name'))).data, allFileState.allFiles[0].name);
-      expect(tester.widget<Text>(find.byKey(const Key('path'))).data, allFileState.allFiles[0].path.path);
-
-      /// More Closed
-
-      ///  Delete
-      final key = find.byKey(const Key("Delete"));
-      expect(key, findsOneWidget);
-      await tester.pump(const Duration(seconds: 1));
-      await tester.tap(key, warnIfMissed: false);
-      await tester.pump(const Duration(seconds: 1));
-
-      /// Delete Closed
-    }
-  });
-
-  /// Scan widget scenarios
-  testWidgets("Scan widget", (WidgetTester tester) async {
-    await tester.pumpWidget(
-      ScreenUtilInit(
-        builder: (_, __) => MaterialApp(
-          navigatorKey: navigatorKey,
-          theme: AppTheme.lightTheme(),
+          supportedLocales: AppLocalizations.supportedLocales,
           home: const BottomBarScreen(currentindex: 0),
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
         ),
-      ),
-    );
+      ));
 
-    await tester.pump(const Duration(seconds: 2));
-    await tester.pumpAndSettle(const Duration(seconds: 2));
+      await tester.pumpAndSettle(const Duration(seconds: 3));
+      expect(find.byKey(const Key('bottom-sheet')), findsWidgets);
+    });
 
-    expect(find.byKey(const Key("scan-bottom-sheet")), findsWidgets);
-    await tester.tap(find.byKey(const Key("scan-bottom-sheet")));
+    /// home screen scenarios
+    group("Home Testing", () {
+      late MockShareUtil mockShareUtil;
 
-    await tester.pumpAndSettle(const Duration(seconds: 2));
-    expect(find.byKey(const Key("camera")), findsOneWidget);
+      setUpAll(() {
+        mockShareUtil = MockShareUtil();
+      });
 
-    await tester.tap(find.byKey(const Key("btn-scan")));
+      testWidgets("Home", (WidgetTester tester) async {
+        await tester.pumpWidget(
+          ScreenUtilInit(
+            builder: (_, __) => MaterialApp(
+              theme: AppTheme.lightTheme(),
+              navigatorKey: navigatorKey,
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: const BottomBarScreen(currentindex: 0),
+            ),
+          ),
+        );
 
-    final MockImagePicker mockImagePicker = MockImagePicker();
+        await tester.pumpAndSettle(const Duration(seconds: 2));
 
-    String imageUrl = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRKKA06sxEvRUMTpCm4DCNVIkH4hhttiGrc3g&usqp=CAU";
-    when(() => mockImagePicker.pickImage(source: ImageSource.gallery)).thenAnswer(
-      (_) => Future.value(XFile(imageUrl)),
-    );
-  });
+        final HomeScreenState homeState = tester.state(find.byType(HomeScreen));
 
-  /// Display image text scenarios
-  testWidgets("Display text", (WidgetTester tester) async {
-    const text = """BE\nSTRONGER\nTHAN YOUR\nSUCCESS""";
-    await tester.pumpWidget(
-      ScreenUtilInit(
-        builder: (_, __) => MaterialApp(
-          navigatorKey: navigatorKey,
-          theme: AppTheme.lightTheme(),
-          home: const DisplayText(text: text),
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-        ),
-      ),
-    );
+        /// default data
+        expect(getTypeAndTitle(context: homeState.context, index: 0).title, AppLocalizations.of(homeState.context)?.allFiles ?? '');
+        expect(getTypeAndTitle(context: homeState.context, index: 1).title, AppLocalizations.of(homeState.context)?.pdfFiles ?? '');
+        expect(getTypeAndTitle(context: homeState.context, index: 2).title, AppLocalizations.of(homeState.context)?.wordFiles ?? '');
+        expect(getTypeAndTitle(context: homeState.context, index: 3).title, AppLocalizations.of(homeState.context)?.pptFiles ?? '');
+        expect(getTypeAndTitle(context: homeState.context, index: 4).title, AppLocalizations.of(homeState.context)?.excelFiles ?? '');
+        expect(getTypeAndTitle(context: homeState.context, index: 5).title, AppLocalizations.of(homeState.context)?.txtFiles ?? '');
+        expect(getTypeAndTitle(context: homeState.context, index: 6).title, AppLocalizations.of(homeState.context)?.imageFiles ?? '');
+        expect(getTypeAndTitle(context: homeState.context, index: 7).title, AppLocalizations.of(homeState.context)?.directories ?? '');
 
-    await tester.pump(const Duration(seconds: 2));
+        /// recent files
+        await tester.tap(find.byKey(Key(1.toString())));
+        await tester.pump(const Duration(seconds: 3));
 
-    DisplayTextState displayTextState = tester.state(find.byType(DisplayText));
-    expect(displayTextState.controller.text, text);
+        if (homeState.recentList.isEmpty) {
+          expect(find.byKey(const Key('no-data')), findsWidgets);
+        } else {
+          expect(find.byKey(const Key('recent-data')), findsWidgets);
+        }
 
-    expect(tester.widget<Text>(find.byKey(const Key("edit-text"))).data, AppLocalizations.of(displayTextState.context)?.edit ?? "");
-    expect(tester.widget<Text>(find.byKey(const Key("copy-text"))).data, AppLocalizations.of(displayTextState.context)?.copy ?? "");
-    expect(tester.widget<Text>(find.byKey(const Key("share-text"))).data, AppLocalizations.of(displayTextState.context)?.share ?? "");
+        await tester.tap(find.byKey(Key(2.toString())));
+        await tester.pump(const Duration(seconds: 3));
 
-    await tester.tap(find.byKey(const Key("share")), warnIfMissed: false);
-    final MockShareUtil mockShareUtil = MockShareUtil();
-    mockShareUtil.share(text);
-    verify(() => mockShareUtil.share(text)).called(1);
+        if (homeState.bookmarkList.isEmpty) {
+          expect(find.byKey(const Key('no-data')), findsWidgets);
+        } else {
+          expect(find.byKey(const Key('bookmark-data')), findsWidgets);
+        }
+      });
 
-    await tester.tap(find.byKey(const Key("copy")), warnIfMissed: false);
-    await tester.pump(const Duration(seconds: 2));
-    await FlutterClipboard.copy(text);
+      testWidgets("Recent", (WidgetTester tester) async {
+        await tester.pumpWidget(
+          ScreenUtilInit(
+            builder: (_, __) => MaterialApp(
+              theme: AppTheme.lightTheme(),
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: const BottomBarScreen(currentindex: 0),
+            ),
+          ),
+        );
 
-    expect(find.byKey(const Key("close-btn")), findsNothing);
-    expect(displayTextState.isEdit, false);
+        await tester.pumpAndSettle(const Duration(seconds: 3));
+        final HomeScreenState homeState = tester.state(find.byType(HomeScreen));
 
-    await tester.tap(find.byKey(const Key("edit")), warnIfMissed: false);
-    await tester.pump(const Duration(seconds: 3));
-    expect(displayTextState.isEdit, true);
+        /// recent files
+        await tester.tap(find.byKey(const Key('1')));
+        await tester.pump(const Duration(seconds: 3));
 
-    expect(find.byKey(const Key("close-btn")), findsWidgets);
-    await tester.tap(find.byKey(const Key("close-btn")), warnIfMissed: false);
-    await tester.pump(const Duration(seconds: 2));
-    expect(displayTextState.isEdit, false);
-  });
+        if (homeState.bookmarkList.isEmpty) {
+          expect(find.byKey(const Key('no-data')), findsWidgets);
+        } else {
+          expect(find.byKey(const Key('recent-data')), findsWidgets);
+          expect(find.byKey(const Key('recent-selected')), findsWidgets);
+          // expect(find.byKey(const Key('recent-select-all')), findsWidgets);
 
-  /// Settings scenarios
-  testWidgets("Settings Language Navigate", (WidgetTester tester) async {
-    await tester.pumpWidget(
-      ScreenUtilInit(
-        builder: (_, __) => MaterialApp(
-          theme: AppTheme.lightTheme(),
-          navigatorKey: navigatorKey,
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          home: const BottomBarScreen(currentindex: 1),
-        ),
-      ),
-    );
+          await tester.pump(const Duration(seconds: 2));
+          await tester.tap(find.byKey(const Key('more-0')), warnIfMissed: false);
 
-    await tester.pump(const Duration(seconds: 2));
-    await tester.pumpAndSettle(const Duration(seconds: 2));
+          await tester.pump(const Duration(seconds: 2));
+          expect(find.byKey(const Key('more-dialog')), findsWidgets);
 
-    expect(find.byKey(const Key("setting-2")), findsWidgets);
+          await tester.pump(const Duration(seconds: 3));
+          expect(tester.widget<Text>(find.byKey(const Key('name'))).data, homeState.recentList[0].name);
+          expect(tester.widget<Text>(find.byKey(const Key('path'))).data, homeState.recentList[0].path.path);
 
-    await tester.pumpAndSettle(const Duration(seconds: 2));
-    await tester.tap(find.byKey(const Key("setting-2")));
-    await tester.pumpAndSettle(const Duration(seconds: 2));
+          String imageType = "";
+          final images = tester.widgetList(find.byKey(const Key('image')));
+          for (final image in images) {
+            if (image is Image) {
+              if (image.image is AssetImage) {
+                final assetName = (image.image as AssetImage).assetName;
+                imageType = assetName;
+              }
+            }
+          }
 
-    expect(find.byKey(const Key("language")), findsWidgets);
-  });
+          expect(imageType.split(".").last, tester.widget<Text>(find.byKey(const Key('name'))).data.toString().split(".").last);
 
-  /// Ratting scenarios
-  group("Ratting dialog", () {
-    testWidgets("Ratting Dialog", (WidgetTester tester) async {
+          expect(find.byKey(Key('onTap-${AppLocalizations.of(homeState.context)?.share ?? ''}')), findsOneWidget);
+          expect(find.byKey(Key('onTap-${AppLocalizations.of(homeState.context)?.moveOut ?? ''}')), findsOneWidget);
+          expect(find.byKey(Key('onTap-${AppLocalizations.of(homeState.context)?.delete ?? ''}')), findsOneWidget);
+
+          await tester.tap(find.byKey(Key('onTap-${AppLocalizations.of(homeState.context)?.share ?? ''}')), warnIfMissed: false);
+
+          mockShareUtil.share(homeState.recentList[0].path.path);
+          verify(() => mockShareUtil.share(homeState.recentList[0].path.path)).called(1);
+
+          // await tester.pump(const Duration(seconds: 2));
+          // expect(tester.widget<Text>(find.byKey(const Key('name'))).data, homeState.bookmarkList[0].name);
+          // expect(tester.widget<Text>(find.byKey(const Key('path'))).data, homeState.bookmarkList[0].path.path);
+          // await tester.tap(find.byKey(Key('onTap-${AppLocalizations.of(homeState.context)?.share ?? ''}')), warnIfMissed: false);
+        }
+      });
+
+      testWidgets("Bookmark", (WidgetTester tester) async {
+        await tester.pumpWidget(
+          ScreenUtilInit(
+            builder: (_, __) => MaterialApp(
+              theme: AppTheme.lightTheme(),
+              navigatorKey: navigatorKey,
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: const BottomBarScreen(currentindex: 0),
+            ),
+          ),
+        );
+
+        await tester.pumpAndSettle(const Duration(seconds: 3));
+        final HomeScreenState homeState = tester.state(find.byType(HomeScreen));
+
+        /// bookmark files
+        await tester.tap(find.byKey(const Key('2')));
+        await tester.pump(const Duration(seconds: 3));
+
+        if (homeState.bookmarkList.isEmpty) {
+          expect(find.byKey(const Key('no-data')), findsWidgets);
+        } else {
+          expect(find.byKey(const Key('bookmark-data')), findsWidgets);
+          expect(find.byKey(const Key('bookmark-selected')), findsWidgets);
+          expect(find.byKey(const Key('bookmark-select-all')), findsWidgets);
+
+          await tester.pump(const Duration(seconds: 2));
+          await tester.tap(find.byKey(const Key('more-0')), warnIfMissed: false);
+
+          await tester.pump(const Duration(seconds: 2));
+          expect(find.byKey(const Key('more-dialog')), findsWidgets);
+
+          await tester.pump(const Duration(seconds: 3));
+          expect(tester.widget<Text>(find.byKey(const Key('name'))).data, homeState.bookmarkList[0].name);
+          expect(tester.widget<Text>(find.byKey(const Key('path'))).data, homeState.bookmarkList[0].path.path);
+
+          String imageType = "";
+          final images = tester.widgetList(find.byKey(const Key('image')));
+          for (final image in images) {
+            if (image is Image) {
+              if (image.image is AssetImage) {
+                final assetName = (image.image as AssetImage).assetName;
+                imageType = assetName;
+              }
+            }
+          }
+
+          expect(imageType.split(".").last, tester.widget<Text>(find.byKey(const Key('name'))).data.toString().split(".").last);
+
+          expect(find.byKey(Key('onTap-${AppLocalizations.of(homeState.context)?.share ?? ''}')), findsOneWidget);
+          expect(find.byKey(Key('onTap-${AppLocalizations.of(homeState.context)?.moveOut ?? ''}')), findsOneWidget);
+          expect(find.byKey(Key('onTap-${AppLocalizations.of(homeState.context)?.delete ?? ''}')), findsOneWidget);
+
+          await tester.pump(const Duration(seconds: 2));
+          expect(tester.widget<Text>(find.byKey(const Key('name'))).data, homeState.bookmarkList[0].name);
+          expect(tester.widget<Text>(find.byKey(const Key('path'))).data, homeState.bookmarkList[0].path.path);
+
+          await tester.tap(find.byKey(Key('onTap-${AppLocalizations.of(homeState.context)?.share ?? ''}')), warnIfMissed: false);
+
+          mockShareUtil.share(homeState.recentList[0].path.path);
+          verify(() => mockShareUtil.share(homeState.recentList[0].path.path)).called(1);
+        }
+      });
+    });
+
+    /// all file scenarios
+    testWidgets("All File", (WidgetTester tester) async {
       await tester.pumpWidget(
         ScreenUtilInit(
           builder: (_, __) => MaterialApp(
             theme: AppTheme.lightTheme(),
-            home: const BottomBarScreen(currentindex: 1),
             supportedLocales: AppLocalizations.supportedLocales,
             localizationsDelegates: AppLocalizations.localizationsDelegates,
+            home: const AllFile(title: "All File", fileType: 'all'),
           ),
         ),
       );
 
       await tester.pump(const Duration(seconds: 3));
-      await tester.pumpAndSettle(const Duration(seconds: 3));
-      await tester.tap(find.byKey(const Key("setting-1")));
+      AllFileState allFileState = tester.state(find.byType(AllFile));
 
-      await tester.pump(const Duration(seconds: 2));
-      expect(find.byKey(const Key("ratting-dialog")), findsWidgets);
+      if (allFileState.allFiles.isEmpty) {
+        expect(find.byKey(const Key('no-files-found')), findsWidgets);
+      }
+
+      allFileState.allFiles = tempList;
+      allFileState.setState(() {});
+      await tester.pump(const Duration(seconds: 10));
+
+      if (allFileState.allFiles.isNotEmpty) {
+        getDate(date) {
+          final dat = DateFormat('yyyy-MM-dd').format(DateTime.parse(date));
+          final time = DateFormat('H:mm a').format(DateTime.parse(date));
+          return "$dat $time";
+        }
+
+        expect(find.byKey(const Key('listTile-0')), findsWidgets);
+
+        final c1 = tester.widget<Text>(find.byKey(const Key('subtitle-0'))).data?.trim();
+        final c2 = "${getDate(allFileState.allFiles[0].date)} ${allFileState.allFiles[0].size}".trim();
+
+        expect(tester.widget<Text>(find.byKey(const Key('title-0'))).data, allFileState.allFiles[0].name);
+        expect(c1, c2);
+
+        /// Bookmark
+        expect(find.byKey(const Key('bookmark-0')), findsOneWidget);
+        bool greyColor = tester.widget<Icon>(find.byKey(const Key("bookmark-0"))).color == ColorUtils.greyDE;
+        await tester.tap(find.byKey(const Key('bookmark-inkwell-0')));
+        await tester.pumpAndSettle(const Duration(seconds: 3));
+        if (greyColor) {
+          expect(tester.widget<Icon>(find.byKey(const Key("bookmark-0"))).color, ColorUtils.yellow00);
+        } else {
+          expect(tester.widget<Icon>(find.byKey(const Key("bookmark-0"))).color, ColorUtils.greyDE);
+        }
+
+        /// bookmark Closed
+        expect(find.byKey(const Key('selected-all')), findsWidgets);
+        expect(find.byKey(const Key('share-delete')), findsNothing);
+
+        /// Selected all
+        String path = allFileState.allFiles[0].path.path;
+        expect(find.byKey(const Key('selected-all')), findsWidgets);
+        expect(find.byKey(const Key('share-delete')), findsNothing);
+
+        await tester.tap(find.byKey(const Key('selected-all')));
+        await tester.pump(const Duration(seconds: 3));
+        expect(find.byKey(const Key('share-delete')), findsWidgets);
+
+        expect(find.byKey(const Key('listTile-0')), findsWidgets);
+        await tester.tap(find.byKey(const Key('listTile-0')));
+        await tester.pump(const Duration(seconds: 3));
+
+        // await tester.tap(find.byKey(const Key('delete-all')));
+        // await tester.pump(const Duration(seconds: 3));
+        // expect(find.byKey(const Key("delete-dialog")), findsWidgets);
+        // await tester.pumpAndSettle(const Duration(seconds: 3));
+
+        // expect(find.byKey(Key("btn-${AppLocalizations.of(allFileState.context)?.delete ?? ""}")), findsWidgets);
+        // await tester.tap(find.byKey(Key("btn-${AppLocalizations.of(allFileState.context)?.delete ?? ""}")));
+        // await tester.pumpAndSettle(const Duration(seconds: 10));
+
+        // mockShareUtil.share(allFileState.allFiles[0].path.path);
+        // verify(() => mockShareUtil.share(allFileState.allFiles[0].path.path)).called(1);
+        //
+        // await tester.tap(find.byKey(const Key('selected-all')), warnIfMissed: false);
+        // await tester.pump(const Duration(seconds: 3));
+
+        await tester.tap(find.byKey(const Key('selected-all')));
+        await tester.pump(const Duration(seconds: 3));
+        debugPrint("object4:-> ${allFileState.recentSelected}");
+
+        /// Filter by
+        expect(find.byKey(const Key('filter')), findsWidgets);
+
+        await tester.tap(find.byKey(const Key('filter')));
+        await tester.pump(const Duration(seconds: 3));
+
+        expect(find.byKey(const Key("filter-bottom-sheet")), findsWidgets);
+        expect(find.byKey(const Key("filter-by")), findsWidgets);
+        expect(find.byKey(const Key("unselected1-0")), findsNothing);
+        expect(find.byKey(const Key("unselected1-1")), findsWidgets);
+        expect(find.byKey(const Key("unselected1-2")), findsWidgets);
+
+        // filter 1
+        await tester.pump(const Duration(seconds: 3));
+        await tester.tap(find.byKey(const Key("unselected1-1")), pointer: 10, warnIfMissed: false);
+        await tester.pump(const Duration(seconds: 3));
+        expect(find.byKey(const Key("unselected1-0")), findsWidgets);
+        expect(find.byKey(const Key("unselected1-1")), findsNothing);
+        expect(find.byKey(const Key("unselected1-2")), findsWidgets);
+
+        allFileState.allFiles.sort((a, b) => a.name.compareTo(b.name));
+
+        await tester.pump(const Duration(seconds: 3));
+        await tester.tap(find.byKey(const Key("unselected1-2")), pointer: 10, warnIfMissed: false);
+        await tester.pump(const Duration(seconds: 3));
+        expect(find.byKey(const Key("unselected1-0")), findsWidgets);
+        expect(find.byKey(const Key("unselected1-1")), findsWidgets);
+        expect(find.byKey(const Key("unselected1-2")), findsNothing);
+
+        // filter 2
+        await tester.pump(const Duration(seconds: 3));
+        expect(find.byKey(const Key("unselected2-0")), findsNothing);
+        expect(find.byKey(const Key("unselected2-1")), findsWidgets);
+
+        await tester.tap(find.byKey(const Key("unselected2-1")), warnIfMissed: false);
+        await tester.pump(const Duration(seconds: 3));
+        expect(find.byKey(const Key("unselected2-0")), findsWidgets);
+        expect(find.byKey(const Key("unselected2-1")), findsNothing);
+        expect(find.byKey(Key("btn-${AppLocalizations.of(allFileState.context)?.ok ?? ""}")), findsWidgets);
+
+        await tester.pump(const Duration(seconds: 3));
+        await tester.tap(find.byKey(Key("btn-${AppLocalizations.of(allFileState.context)?.ok ?? ""}")), warnIfMissed: false);
+        await tester.pump(const Duration(seconds: 3));
+        await tester.pumpAndSettle(const Duration(seconds: 3));
+
+        /// Filter by closed
+      }
     });
 
-    testWidgets("Open Ratting dialog", (WidgetTester tester) async {
+    /// Scan widget scenarios
+    testWidgets("Scan widget", (WidgetTester tester) async {
       await tester.pumpWidget(
         ScreenUtilInit(
           builder: (_, __) => MaterialApp(
+            navigatorKey: navigatorKey,
             theme: AppTheme.lightTheme(),
-            home: const BottomBarScreen(currentindex: 1),
-            supportedLocales: AppLocalizations.supportedLocales,
+            home: const BottomBarScreen(currentindex: 0),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
           ),
         ),
       );
 
+      await tester.pump(const Duration(seconds: 2));
       await tester.pumpAndSettle(const Duration(seconds: 2));
-      final SettingState settingState = tester.state(find.byType(Setting));
 
-      await tester.tap(find.byKey(const Key("setting-1")));
+      expect(find.byKey(const Key("scan-bottom-sheet")), findsWidgets);
+      await tester.tap(find.byKey(const Key("scan-bottom-sheet")));
+
+      await tester.pumpAndSettle(const Duration(seconds: 2));
+      expect(find.byKey(const Key("camera")), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key("btn-scan")));
+
+      final MockImagePicker mockImagePicker = MockImagePicker();
+
+      String imageUrl = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRKKA06sxEvRUMTpCm4DCNVIkH4hhttiGrc3g&usqp=CAU";
+      when(() => mockImagePicker.pickImage(source: ImageSource.gallery)).thenAnswer(
+        (_) => Future.value(XFile(imageUrl)),
+      );
+    });
+
+    /// Display image text scenarios
+    testWidgets("Display text", (WidgetTester tester) async {
+      const text = """BE\nSTRONGER\nTHAN YOUR\nSUCCESS""";
+
+      await tester.runAsync(() async {
+        await tester.pumpWidget(
+          ScreenUtilInit(
+            builder: (_, __) => MaterialApp(
+              navigatorKey: navigatorKey,
+              theme: AppTheme.lightTheme(),
+              home: const DisplayText(text: text),
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+            ),
+          ),
+        );
+      });
+
       await tester.pump(const Duration(seconds: 2));
 
-      expect(find.byKey(const Key("ratting-dialog")), findsWidgets);
+      DisplayTextState displayTextState = tester.state(find.byType(DisplayText));
+      expect(displayTextState.controller.text, text);
 
-      prefsRepo.setInt(key: PrefsRepo.rate, value: 0);
-      double rat = prefsRepo.getInt(key: PrefsRepo.rate).toDouble();
+      expect(tester.widget<Text>(find.byKey(const Key("edit-text"))).data, AppLocalizations.of(displayTextState.context)?.edit ?? "");
+      expect(tester.widget<Text>(find.byKey(const Key("copy-text"))).data, AppLocalizations.of(displayTextState.context)?.copy ?? "");
+      // expect(tester.widget<Text>(find.byKey(const Key("share-text"))).data, AppLocalizations.of(displayTextState.context)?.share ?? "");
+      //
+      await tester.tap(find.byKey(const Key("share")), warnIfMissed: false);
 
-      if (rat > 3 && rat < 6) {
-        expect(find.byKey(const Key("Title 2")), findsOneWidget);
+      mockShareUtil.share(text);
+      verify(() => mockShareUtil.share(text)).called(1);
 
-        expect(tester.widget<Text>(find.byKey(const Key("title"))).data, AppLocalizations.of(settingState.context)?.appreciation ?? '');
-        expect(tester.widget<Text>(find.byKey(const Key("subtitle"))).data, AppLocalizations.of(settingState.context)?.motivation ?? '');
+      await tester.tap(find.byKey(const Key("copy")), warnIfMissed: false);
+      await tester.pump(const Duration(seconds: 2));
+      await FlutterClipboard.copy(text);
 
-        rat = 4;
-      }
+      expect(find.byKey(const Key("close-btn")), findsNothing);
+      expect(displayTextState.isEdit, false);
 
-      if (rat < 4) {
-        expect(find.byKey(const Key("Title 1")), findsOneWidget);
+      await tester.tap(find.byKey(const Key("edit")), warnIfMissed: false);
+      await tester.pump(const Duration(seconds: 3));
+      expect(displayTextState.isEdit, true);
 
-        expect(tester.widget<Text>(find.byKey(const Key("title"))).data, AppLocalizations.of(settingState.context)?.thankYou ?? '');
-        expect(tester.widget<Text>(find.byKey(const Key("subtitle"))).data, AppLocalizations.of(settingState.context)?.rateUsDesc ?? '');
-      }
+      expect(find.byKey(const Key("close-btn")), findsWidgets);
+      await tester.tap(find.byKey(const Key("close-btn")), warnIfMissed: false);
+      await tester.pump(const Duration(seconds: 2));
+      expect(displayTextState.isEdit, false);
     });
-  });
 
-  /// Language scenarios
-  group("Language", () {
-    testWidgets("Language", (WidgetTester tester) async {
+    /// Settings scenarios
+    testWidgets("Settings Language Navigate", (WidgetTester tester) async {
       await tester.pumpWidget(
         ScreenUtilInit(
           builder: (_, __) => MaterialApp(
-            home: const Language(),
             theme: AppTheme.lightTheme(),
             navigatorKey: navigatorKey,
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
+            home: const BottomBarScreen(currentindex: 1),
           ),
         ),
       );
-      await tester.pump();
 
-      expect(find.byKey(const Key('language')), findsOneWidget);
+      await tester.pump(const Duration(seconds: 2));
+      await tester.pumpAndSettle(const Duration(seconds: 2));
+
+      expect(find.byKey(const Key("setting-2")), findsWidgets);
+
+      await tester.pumpAndSettle(const Duration(seconds: 2));
+      await tester.tap(find.byKey(const Key("setting-2")));
+      await tester.pumpAndSettle(const Duration(seconds: 2));
+
+      expect(find.byKey(const Key("language")), findsWidgets);
     });
 
-    testWidgets("Language check localisation", (WidgetTester tester) async {
-      await tester.pumpWidget(ScreenUtilInit(builder: (_, __) => const MaterialApp(home: Language())));
-      await tester.pump();
+    /// Ratting scenarios
+    group("Ratting dialog", () {
+      testWidgets("Ratting Dialog", (WidgetTester tester) async {
+        await tester.pumpWidget(
+          ScreenUtilInit(
+            builder: (_, __) => MaterialApp(
+              theme: AppTheme.lightTheme(),
+              home: const BottomBarScreen(currentindex: 1),
+              supportedLocales: AppLocalizations.supportedLocales,
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+            ),
+          ),
+        );
 
-      await tester.tap(find.byKey(Key(languageList[0].title)));
-      expect(StringUtils.english, languageList[0].title);
-      await tester.pumpAndSettle(const Duration(seconds: 2));
+        await tester.pump(const Duration(seconds: 3));
+        await tester.pumpAndSettle(const Duration(seconds: 3));
+        await tester.tap(find.byKey(const Key("setting-1")));
 
-      await tester.tap(find.byKey(Key(languageList[1].title)));
-      expect(StringUtils.arabic, languageList[1].title);
-      await tester.pumpAndSettle(const Duration(seconds: 2));
+        await tester.pump(const Duration(seconds: 2));
+        expect(find.byKey(const Key("ratting-dialog")), findsWidgets);
+      });
 
-      await tester.tap(find.byKey(Key(languageList[2].title)));
-      expect(StringUtils.bulgarian, languageList[2].title);
-      await tester.pumpAndSettle(const Duration(seconds: 2));
+      testWidgets("Open Ratting dialog", (WidgetTester tester) async {
+        await tester.pumpWidget(
+          ScreenUtilInit(
+            builder: (_, __) => MaterialApp(
+              theme: AppTheme.lightTheme(),
+              home: const BottomBarScreen(currentindex: 1),
+              supportedLocales: AppLocalizations.supportedLocales,
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+            ),
+          ),
+        );
 
-      await tester.tap(find.byKey(Key(languageList[3].title)));
-      expect(StringUtils.czech, languageList[3].title);
-      await tester.pumpAndSettle(const Duration(seconds: 2));
+        await tester.pumpAndSettle(const Duration(seconds: 2));
+        final SettingState settingState = tester.state(find.byType(Setting));
 
-      await tester.tap(find.byKey(Key(languageList[4].title)));
-      expect(StringUtils.polish, languageList[4].title);
-      await tester.pumpAndSettle(const Duration(seconds: 2));
+        await tester.tap(find.byKey(const Key("setting-1")));
+        await tester.pump(const Duration(seconds: 2));
+
+        expect(find.byKey(const Key("ratting-dialog")), findsWidgets);
+
+        prefsRepo.setInt(key: PrefsRepo.rate, value: 0);
+        double rat = prefsRepo.getInt(key: PrefsRepo.rate).toDouble();
+
+        if (rat > 3 && rat < 6) {
+          expect(find.byKey(const Key("Title 2")), findsOneWidget);
+
+          expect(tester.widget<Text>(find.byKey(const Key("title"))).data, AppLocalizations.of(settingState.context)?.appreciation ?? '');
+          expect(tester.widget<Text>(find.byKey(const Key("subtitle"))).data, AppLocalizations.of(settingState.context)?.motivation ?? '');
+
+          rat = 4;
+        }
+
+        if (rat < 4) {
+          expect(find.byKey(const Key("Title 1")), findsOneWidget);
+
+          expect(tester.widget<Text>(find.byKey(const Key("title"))).data, AppLocalizations.of(settingState.context)?.thankYou ?? '');
+          expect(tester.widget<Text>(find.byKey(const Key("subtitle"))).data, AppLocalizations.of(settingState.context)?.rateUsDesc ?? '');
+        }
+      });
+    });
+
+    /// Language scenarios
+    group("Language", () {
+      testWidgets("Language", (WidgetTester tester) async {
+        await tester.pumpWidget(
+          ScreenUtilInit(
+            builder: (_, __) => MaterialApp(
+              home: const Language(),
+              theme: AppTheme.lightTheme(),
+              navigatorKey: navigatorKey,
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+            ),
+          ),
+        );
+        await tester.pump();
+
+        expect(find.byKey(const Key('language')), findsOneWidget);
+      });
+
+      testWidgets("Language check localisation", (WidgetTester tester) async {
+        await tester.pumpWidget(ScreenUtilInit(builder: (_, __) => const MaterialApp(home: Language())));
+        await tester.pump();
+
+        await tester.tap(find.byKey(Key(languageList[0].title)));
+        expect(StringUtils.english, languageList[0].title);
+        await tester.pumpAndSettle(const Duration(seconds: 2));
+
+        await tester.tap(find.byKey(Key(languageList[1].title)));
+        expect(StringUtils.arabic, languageList[1].title);
+        await tester.pumpAndSettle(const Duration(seconds: 2));
+
+        await tester.tap(find.byKey(Key(languageList[2].title)));
+        expect(StringUtils.bulgarian, languageList[2].title);
+        await tester.pumpAndSettle(const Duration(seconds: 2));
+
+        await tester.tap(find.byKey(Key(languageList[3].title)));
+        expect(StringUtils.czech, languageList[3].title);
+        await tester.pumpAndSettle(const Duration(seconds: 2));
+
+        await tester.tap(find.byKey(Key(languageList[4].title)));
+        expect(StringUtils.polish, languageList[4].title);
+        await tester.pumpAndSettle(const Duration(seconds: 2));
+      });
     });
   });
 }

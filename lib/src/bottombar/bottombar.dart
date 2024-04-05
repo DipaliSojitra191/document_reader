@@ -52,10 +52,9 @@ class _BottomBarScreenState extends State<BottomBarScreen> {
 
   @override
   void initState() {
-    super.initState();
-
     setPageIndex(index: widget.currentindex);
     checkInternetConnection(context: context);
+    super.initState();
   }
 
   setPageIndex({int? index}) {
@@ -65,6 +64,7 @@ class _BottomBarScreenState extends State<BottomBarScreen> {
   @override
   Widget build(BuildContext context) {
     return BlocConsumer(
+      key: const Key('bottom-bar'),
       bloc: bottomBarBloc,
       listener: (BuildContext context, BottomBarState state) {
         if (state is GetPageIndexState) {
@@ -222,12 +222,6 @@ class _BottomBarScreenState extends State<BottomBarScreen> {
       onTap: (isPdf ?? false)
           ? () async {
               try {
-                debugPrint("btn $key");
-                final s = await checkInternetConnection(context: context);
-                if (s == false) {
-                  return;
-                }
-
                 await navigatorPush(context: context, navigate: const SelectImages());
                 navigateBack(context: context);
               } catch (e) {

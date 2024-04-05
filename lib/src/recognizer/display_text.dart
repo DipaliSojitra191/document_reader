@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:clipboard/clipboard.dart';
 import 'package:document_reader/src/recognizer/bloc/display_text_bloc.dart';
 import 'package:document_reader/src/recognizer/bloc/display_text_event.dart';
@@ -9,6 +7,7 @@ import 'package:document_reader/utils/AppImages.dart';
 import 'package:document_reader/utils/common_appbar.dart';
 import 'package:document_reader/utils/common_functions.dart';
 import 'package:document_reader/utils/custom_snackbar.dart';
+import 'package:document_reader/utils/logs.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -156,14 +155,14 @@ class DisplayTextState extends State<DisplayText> {
                     InkWell(
                       key: const Key("share"),
                       onTap: () {
-                        log("share btn tap");
+                        logs(message: "share btn tap");
                         Share.share(widget.text);
                       },
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Image.asset(IconStrings.share1, width: 20.w, key: const Key("share-image")),
-                          SizedBox(height: 10.h),
+                          Image.asset(IconStrings.share1, width: 20.w, height: 30.h, key: const Key("share-image")),
+                          // SizedBox(height: 2.h),
                           Text(AppLocalizations.of(context)?.share ?? "", key: const Key("share-text")),
                         ],
                       ),

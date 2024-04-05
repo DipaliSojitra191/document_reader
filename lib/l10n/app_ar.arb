@@ -73,7 +73,6 @@
   "somethingWentWrong": "حدث خطأ ما",
   "noConnectionError": "خطأ في الاتصال",
   "checkInternetConnectivity": "يرجى التحقق من اتصال الإنترنت الخاص بك",
-  "permissionRequired": "الإذن مطلوب",
   "externalStoragePermissionRequired": "الإذن الخارجي المطلوب لقراءة المستندات على أجهزتك.",
   "cancel": "إلغاء",
   "allow": "السماح",

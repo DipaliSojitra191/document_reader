@@ -1,4 +1,4 @@
-// ignore_for_file: file_names
+import 'dart:async';
 
 import 'package:document_reader/shared_Preference/preferences_helper.dart';
 import 'package:document_reader/src/bottombar/bottombar.dart';
@@ -16,18 +16,33 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen> {
   final PrefsRepo prefsRepo = PrefsRepo();
+  Timer? timer;
+
   @override
   void initState() {
-    super.initState();
     checkInternetConnection(context: context);
-    Future.delayed(const Duration(seconds: 3), () {
-      removeRoute(const BottomBarScreen(), context: context);
+    timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (timer.tick > 2) {
+        if (context.mounted) {
+          timer.cancel();
+          removeRoute(navigate: const BottomBarScreen(), context: context);
+        }
+      }
     });
+
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    timer?.cancel();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       key: const Key('splash'),
       body: SizedBox(
         height: MediaQuery.of(context).size.height,

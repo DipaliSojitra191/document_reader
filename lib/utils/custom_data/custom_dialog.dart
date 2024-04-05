@@ -1,5 +1,6 @@
 import 'package:document_reader/utils/AppColors.dart';
 import 'package:document_reader/utils/custom_btn.dart';
+import 'package:document_reader/utils/logs.dart';
 import 'package:document_reader/utils/navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -8,12 +9,12 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 /// Dialog
 void deleteDialog({
   required BuildContext context,
-  required VoidCallback callback,
+  required VoidCallback deleteOnTap,
 }) {
-  debugPrint("delete dialog open");
   showDialog(
     context: context,
     builder: (BuildContext context) {
+      logs(message: "open delete dialog");
       return AlertDialog(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(15.w),
@@ -62,9 +63,8 @@ void deleteDialog({
               padding: EdgeInsets.all(5.w),
               child: Center(
                 child: CustomBtn(
-                  key: const Key("button"),
                   onTap: () async {
-                    callback();
+                    deleteOnTap();
                     navigateBack(context: context);
                   },
                   title: AppLocalizations.of(context)?.delete ?? "",
@@ -78,7 +78,7 @@ void deleteDialog({
         ),
       );
     },
-  );
+  ).then((value) => logs(message: "close delete dialog"));
 }
 
 Future<String> renameDialog({
@@ -90,6 +90,7 @@ Future<String> renameDialog({
   await showDialog(
     context: context,
     builder: (BuildContext context) {
+      print("rename dialog open");
       return StatefulBuilder(builder: (context, setStat) {
         return AlertDialog(
           key: const Key("rename-dialog"),
@@ -207,7 +208,7 @@ Future<String> renameDialog({
         );
       });
     },
-  );
+  ).then((value) => logs(message: "close rename dialog"));
 
   return renameController.text;
 }
@@ -216,7 +217,6 @@ moveOutDialog({
   required BuildContext context,
   required VoidCallback moveOut,
 }) {
-  debugPrint("move out dialog open");
   showDialog(
     context: context,
     builder: (BuildContext context) {
@@ -283,7 +283,7 @@ moveOutDialog({
         ),
       );
     },
-  ).then((value) => debugPrint("more dialog closed"));
+  );
 }
 
 Future<bool> showExitConfirmationDialog(BuildContext context) async {
@@ -337,9 +337,7 @@ Future<bool> showExitConfirmationDialog(BuildContext context) async {
         ],
       );
     },
-  ).then((value) {
-    debugPrint("Show exit confirmation dialog closed");
-  });
+  ).then((value) {});
   return data;
 }
 
@@ -381,8 +379,6 @@ Future<bool> permissionDialog({required VoidCallback allow, required BuildContex
         ],
       );
     },
-  ).then((value) {
-    debugPrint('permission dialog closed');
-  });
+  ).then((value) {});
   return data;
 }

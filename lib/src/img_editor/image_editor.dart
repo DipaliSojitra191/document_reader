@@ -89,7 +89,7 @@ class _ImageEditorScreenState extends State<ImageEditorScreen> {
           showLoader = true;
         } else if (state is SaveImageState) {
           if (state.status == true) {
-            removeRoute(const BottomBarScreen(currentindex: 0), context: context);
+            removeRoute(navigate: const BottomBarScreen(currentindex: 0), context: context);
           }
           showLoader = false;
         } else if (state is ImageStatusState) {
@@ -364,7 +364,7 @@ class _ImageEditorScreenState extends State<ImageEditorScreen> {
                   onTap: () {
                     deleteDialog(
                       context: context,
-                      callback: () {
+                      deleteOnTap: () {
                         imageEditorBloc.add(RemoveAtIndexEvent(index: currentIndex));
                       },
                     );

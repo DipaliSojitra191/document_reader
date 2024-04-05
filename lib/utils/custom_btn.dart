@@ -38,6 +38,7 @@ class CustomBtn extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
+      key: Key("btn-$title"),
       onTap: onTap,
       hoverColor: ColorUtils.transparent,
       splashColor: ColorUtils.transparent,

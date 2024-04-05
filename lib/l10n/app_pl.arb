@@ -73,7 +73,6 @@
   "somethingWentWrong": "Coś poszło nie tak",
   "noConnectionError": "Błąd braku połączenia",
   "checkInternetConnectivity": "Proszę sprawdzić połączenie internetowe",
-  "permissionRequired": "Wymagane uprawnienie",
   "externalStoragePermissionRequired": "Wymagane jest uprawnienie do dostępu do pamięci zewnętrznej, aby czytać dokumenty na Twoich urządzeniach.",
   "cancel": "Anuluj",
   "allow": "Zezwól",

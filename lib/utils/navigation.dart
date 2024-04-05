@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-// final BuildContext currentContext = navigatorKey.currentState!.context;
-
 Future<void> navigatorPush({required BuildContext context, required StatefulWidget navigate}) async {
   await Navigator.push(
     context,
@@ -9,11 +7,11 @@ Future<void> navigatorPush({required BuildContext context, required StatefulWidg
   );
 }
 
-navigateBack({required BuildContext context, var result}) {
-  Navigator.of(context).pop(result);
+navigateBack({required BuildContext context}) {
+  Navigator.of(context).pop();
 }
 
-removeRoute(navigate, {required BuildContext context}) {
+removeRoute({required StatefulWidget navigate, required BuildContext context}) {
   Navigator.of(context).pushAndRemoveUntil(
     MaterialPageRoute(builder: (context) => navigate),
     (route) => false,

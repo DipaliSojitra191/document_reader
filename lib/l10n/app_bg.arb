@@ -73,7 +73,6 @@
   "somethingWentWrong": "Възникна грешка",
   "noConnectionError": "Грешка при връзката",
   "checkInternetConnectivity": "Моля, проверете интернет връзката си",
-  "permissionRequired": "Изисква се разрешение",
   "externalStoragePermissionRequired": "Изисква се разрешение за външното съхранение, за да прочетете документите на вашите устройства.",
   "cancel": "Отказ",
   "allow": "Разрешаване",

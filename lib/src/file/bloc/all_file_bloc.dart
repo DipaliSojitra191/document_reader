@@ -8,12 +8,12 @@ import 'package:document_reader/shared_Preference/preferences_helper.dart';
 import 'package:document_reader/src/file/bloc/all_file_event.dart';
 import 'package:document_reader/src/file/bloc/all_file_state.dart';
 import 'package:document_reader/src/file/model/files_data_model.dart';
-import 'package:document_reader/utils/common_functions.dart';
-import 'package:document_reader/utils/custom_data/custom_dialog.dart';
 import 'package:document_reader/utils/logs.dart';
-import 'package:document_reader/utils/navigation.dart';
-import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
+
+import '../../../utils/common_functions.dart';
+import '../../../utils/custom_data/custom_dialog.dart';
+import '../../../utils/navigation.dart';
 
 class AllFileBloc extends Bloc<AllFileEvent, AllFileBlocState> {
   AllFileBloc() : super(AllFileInitial()) {
@@ -71,71 +71,6 @@ class AllFileBloc extends Bloc<AllFileEvent, AllFileBlocState> {
   bool hasPermission = false;
 
   getFileEvent(GetFileEvent event, Emitter<AllFileBlocState> emit) async {
-    // List<FilesDataModel> allFiles = [
-    //   FilesDataModel(
-    //     count: "1",
-    //     size: "17 KB",
-    //     path: File("1"),
-    //     selected: false,
-    //     bookmark: false,
-    //     isFolder: false,
-    //     name: "entity ${Random().nextInt(100)}.pdf",
-    //     date: DateTime.now().toString(),
-    //   ),
-    //   FilesDataModel(
-    //     count: "2",
-    //     size: "15 KB",
-    //     path: File("2"),
-    //     selected: false,
-    //     bookmark: false,
-    //     isFolder: false,
-    //     name: "entity ${Random().nextInt(100)}.doc",
-    //     date: DateTime.now().toString(),
-    //   ),
-    //   FilesDataModel(
-    //     count: "3",
-    //     size: "13 KB",
-    //     path: File("3"),
-    //     selected: false,
-    //     bookmark: false,
-    //     isFolder: false,
-    //     name: "entity ${Random().nextInt(100)}.ppt",
-    //     date: DateTime.now().toString(),
-    //   ),
-    //   FilesDataModel(
-    //     count: "4",
-    //     size: "11 KB",
-    //     path: File("4"),
-    //     selected: false,
-    //     bookmark: false,
-    //     isFolder: false,
-    //     name: "entity ${Random().nextInt(100)}.txt",
-    //     date: DateTime.now().toString(),
-    //   ),
-    //   FilesDataModel(
-    //     count: "5",
-    //     size: "15 KB",
-    //     path: File("5"),
-    //     selected: false,
-    //     bookmark: false,
-    //     isFolder: false,
-    //     name: "entity ${Random().nextInt(100)}.ppt",
-    //     date: DateTime.now().toString(),
-    //   ),
-    //   FilesDataModel(
-    //     count: "6",
-    //     size: "20 KB",
-    //     path: File("6"),
-    //     selected: false,
-    //     bookmark: false,
-    //     isFolder: false,
-    //     name: "entity ${Random().nextInt(100)}.xls",
-    //     date: DateTime.now().toString(),
-    //   ),
-    // ];
-    //
-    // emit(GetFileState(allFiles: allFiles));
-
     allFiles = [];
     bool s1 = await Permission.mediaLibrary.status == PermissionStatus.granted;
     bool s = await Permission.manageExternalStorage.status == PermissionStatus.granted;
@@ -230,7 +165,6 @@ class AllFileBloc extends Bloc<AllFileEvent, AllFileBlocState> {
             }
           }
         } catch (e) {
-          debugPrint("E:--> $e");
           logs(message: "DIR not found", name: 'directory');
         }
 
@@ -248,7 +182,6 @@ class AllFileBloc extends Bloc<AllFileEvent, AllFileBlocState> {
             }
           }
         } catch (e) {
-          debugPrint("E:--> $e");
           logs(message: "Document not found", name: 'directory');
         }
 
@@ -265,7 +198,6 @@ class AllFileBloc extends Bloc<AllFileEvent, AllFileBlocState> {
             }
           }
         } catch (e) {
-          debugPrint("E:--> $e");
           logs(message: "Download not found", name: 'directory');
         }
       }

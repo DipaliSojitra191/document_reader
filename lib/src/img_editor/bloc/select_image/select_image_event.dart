@@ -1,7 +1,9 @@
+import 'package:flutter/cupertino.dart';
+
 abstract class SelectImageEvent {}
 
 class FetchAssetsEvent extends SelectImageEvent {
-  final context;
+  final BuildContext context;
 
   FetchAssetsEvent({required this.context});
 }
