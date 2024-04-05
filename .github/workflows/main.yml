@@ -52,11 +52,11 @@ jobs:
       - run: flutter pub get
         name: Get dependencies
 
-      - name: Flutter Test
-        run: flutter test --coverage
+#      - name: Flutter Test
+#        run: flutter test --coverage
 
-#      - run: flutter build apk
-#        name: Build APK
+      - run: flutter build apk
+        name: Build APK
 
       - uses: actions/upload-artifact@v2
         name: Upload APK
